@@ -9,7 +9,7 @@ These instructions will help you get a copy of the project up and running on you
 To build this project, you will need to have CMake and Make installed on your system. The installation may vary depending on your operating system, but the instructions for a Debian based system (e.g Ubuntu) are listed below. You can install them using the following commands:
 
 ```
-sudo apt-get install cmake sudo apt-get install build-essential
+sudo apt-get install cmake build-essential
 ```
 
 ### Building the Project
