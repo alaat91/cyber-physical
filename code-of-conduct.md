@@ -1,0 +1,13 @@
+This agreement document outlines the terms of collaboration for the group consisting of 5 members for the purpose of meeting all the requirements of passing course DIT636 with a grade 5. We agree to the following terms:
+
+**Collaboration Plan**: We plan to collaborate by programming in pairs, working on campus, and using the SCRUM methodology, through the incorporation of daily standups, sprint reviews, sprint retrospectives etc. Meetings will be held both on campus and on Discord. The specific time planning will be flexible and we will plan one sprint ahead. All meetings are compulsory unless a specific reason is given. The team should be notified about the absence, or potential delay in attendance a day in advance. It’s every team member's responsibility to catch up on what has been discussed if they have missed a meeting. Everyone should be on time and notify if they are running late via discord.
+
+**Information Sharing**: To ensure that everyone in our team stays informed about individual contributions, we will have daily standups, use KanBan boards, and have daily communication on Discord and on campus. Discord plays a major role when it comes to information sharing within the team, information relating to work sessions, session scheduling, sharing of notes and resources, documentation of meetings, assignments etc. will be available through discord to all members of the team. 
+
+**Knowledge Transfer**: We will ensure knowledge transfer among team members by having retrospective meetings, working in groups, daily standups, and general meetings. We will have a wiki on the GitLab repository to help developers be up to date on all parts of the project. Commenting is also an important tool for knowledge transfer. We will use comments in our code not only for the purposes of documentation but also to clarify design and programming decisions to other members of the team. The code should be thoroughly commented and adhere to the naming/programming conventions laid out by the team. 
+
+**Communication Plan**: Our usual communication plan will include daily standups and using Discord for remote communication. As aforementioned the discord channel is separated into several text channels to ensure proper categorization of information and communication.
+
+**Conflict Resolution**: In the event of conflicts, we will resolve them through a team meeting where decisions will be taken democratically and will seek the advice of ChatGPT in cases where we are unable to come to a consensus for the most logical resolution.
+
+We agree to adhere to these terms for the duration of the project. Any changes to this agreement must be made with the consensus of all members of the team.
