@@ -36,7 +36,7 @@ mkdir build && cd build
 
 4. Run CMake to generate the Makefiles:
 ```
-cmake ..
+cmake ../src
 ```
 
 5. Run Make to build the project:
