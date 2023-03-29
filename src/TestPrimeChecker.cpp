@@ -16,3 +16,7 @@ TEST_CASE("Test PrimeChecker. 56"){
     PrimeChecker pc;
     REQUIRE(pc.isPrime(56) == 0);
 }
+TEST_CASE("Test PrimeChecker. non-prime"){
+    PrimeChecker pc;
+    REQUIREFALSE(pc.isPrime(5));
+}
