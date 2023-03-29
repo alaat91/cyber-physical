@@ -1,0 +1,4 @@
+/home/parallels/CLion-2022.3.3-aarch64/clion-2022.3.3/bin/cmake/linux/aarch64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/parallels/CLion-2022.3.3-aarch64/clion-2022.3.3/bin/ninja/linux/aarch64/ninja -G Ninja -S /home/parallels/CLionProjects/2023-group-06/src -B /home/parallels/CLionProjects/2023-group-06/src/cmake-build-debug
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/parallels/CLionProjects/2023-group-06/src/cmake-build-debug
