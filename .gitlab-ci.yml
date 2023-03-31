@@ -39,7 +39,7 @@ build-and-test:
     - docker-build
   stage: build
   rules:
-    - if: '$CI_COMMIT_TAG =~ ^v\d+\.\d+\.\d+$'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
       when: never
     - if: '$CI_COMMIT_BRANCH'
       when: always
@@ -52,7 +52,7 @@ release:
     - docker-build
   stage: deploy
   rules:
-    - if: '$CI_COMMIT_TAG =~ ^v\d+\.\d+\.\d+$'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
       when: always
   script:
     - docker build -f Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
