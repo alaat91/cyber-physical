@@ -47,15 +47,6 @@ build-and-test:
   script:
     - docker build -f Dockerfile .
 
-# This section describes how to publish the coverage report
-coverage:
-  stage: test
-  script:
-    - coverage:upload
-  artifacts:
-    paths:
-      - coverage-report
-
 # This section describes what shall be done to deploy artefacts from the project.
 release:
   tags:
