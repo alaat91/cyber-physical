@@ -33,7 +33,7 @@ before_script:
   - docker info
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   - apk update
-  - apk add --no-cache make gcc g++ make cmake lcov
+  - apk add --no-cache make gcc g++ lcov
 
 # This section describes what shall be done to build and test the project.
 build-and-test:
@@ -48,6 +48,7 @@ build-and-test:
   script:
     - docker build -f Dockerfile .
     - make test   
+    - apk add --no-cache lcov
     - lcov --directory . --capture --output-file coverage.info   # Add this line to generate coverage report
 
 # This section describes what shall be done to deploy artefacts from the project.
