@@ -46,6 +46,7 @@ build-and-test:
       when: always
   script:
     - docker build -f Dockerfile .
+    - cmake -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage"
 
 # This section describes what shall be done to deploy artefacts from the project.
 release:
