@@ -73,9 +73,7 @@ generate_coverage:
     - apk add lcov g++ make cmake python3 py3-pip perl-gd
     - pip install lcov_cobertura
   script:
-    - mkdir build
-    - cd build
-    - cmake ../src
+    - cmake src/
     - make
     - make test
     - make coverage
@@ -84,9 +82,9 @@ generate_coverage:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: build/coverage/coverage.xml
+        path: coverage/coverage.xml
     paths:
-      - build/coverage/
-      - build/coverage-report-frames/
+      - coverage/
+      - coverage-report-frames/
 
   
