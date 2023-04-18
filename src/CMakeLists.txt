@@ -15,7 +15,7 @@ add_custom_target(coverage
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/coverage
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/coverage
     COMMAND lcov --capture --directory ${CMAKE_BINARY_DIR} --output-file ${CMAKE_BINARY_DIR}/coverage/coverage.info
-    COMMAND lcov --remove ${CMAKE_BINARY_DIR}/coverage/coverage.info '/usr/*' --output-file ${CMAKE_BINARY_DIR}/coverage/coverage.info
+    COMMAND lcov --remove ${CMAKE_BINARY_DIR}/coverage/coverage.info '/usr/*' '${CMAKE_SOURCE_DIR}/catch.hpp' --output-file ${CMAKE_BINARY_DIR}/coverage/coverage.info
     COMMAND lcov --list ${CMAKE_BINARY_DIR}/coverage/coverage.info
     COMMAND genhtml --frames -o ${CMAKE_BINARY_DIR}/coverage-report-frames --prefix source/ ${CMAKE_BINARY_DIR}/coverage/coverage.info
     COMMAND lcov_cobertura ./coverage/coverage.info --output ${CMAKE_BINARY_DIR}/coverage/coverage.xml --base-dir ${CMAKE_BINARY_DIR} 
