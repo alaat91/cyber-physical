@@ -60,3 +60,27 @@ release:
   script:
     - docker build -f Dockerfile -t "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG" .
     - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG"
+
+
+generate_coverage:
+  image: alpine:latest
+  stage: test
+  before_script:
+    - echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories
+    - apk update
+    - apk add lcov g++ make cmake python3 py3-pip xmlstarlet
+    - pip install lcov_cobertura
+  script:
+    - mkdir build
+    - cd build
+    - cmake ../src
+    - make
+    - make test
+    - make coverage
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: build/coverage/coverage.xml
+
+  
