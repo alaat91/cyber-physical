@@ -26,3 +26,9 @@ TEST_CASE("Test PrimeChecker. non-prime"){
     PrimeChecker pc;
     REQUIRE_FALSE(pc.isPrime(6));
 }
+
+
+TEST_CASE("Test PrimeChecker. composite"){
+    PrimeChecker pc;
+    REQUIRE(pc.isComposite(6));
+}
