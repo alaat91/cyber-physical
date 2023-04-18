@@ -1,4 +1,8 @@
-[![coverage report](https://git.chalmers.se/courses/dit638/students/2023-group-06/badges/a8-bonus/coverage.svg)](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/commits/a8-bonus)
+[![Latest Release](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/badges/release.svg)](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/releases)
+
+[![pipeline status](https://git.chalmers.se/courses/dit638/students/2023-group-06/badges/main/pipeline.svg)](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/commits/%{current_branch})
+
+[![coverage report](https://git.chalmers.se/courses/dit638/students/2023-group-06/badges/a8-bonus/coverage.svg)](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/commits/%{current_branch})
 
 # 2023-group-06
 
