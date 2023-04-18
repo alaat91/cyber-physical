@@ -80,9 +80,13 @@ generate_coverage:
     - make test
     - make coverage
   artifacts:
+    expire_in: 2 days
     reports:
       coverage_report:
         coverage_format: cobertura
         path: build/coverage/coverage.xml
+    paths:
+      - build/coverage/
+      - build/coverage-report-frames/
 
   
