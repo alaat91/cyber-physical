@@ -1,3 +1,4 @@
+[![coverage report](https://git.chalmers.se/courses/dit638/students/2023-group-06/badges/a8-bonus/coverage.svg)](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/commits/a8-bonus)
 
 # 2023-group-06
 
