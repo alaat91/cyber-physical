@@ -106,4 +106,5 @@ install(TARGETS ${PROJECT_NAME} DESTINATION bin COMPONENT ${PROJECT_NAME})
 
 ################################################################################
 # Implement testing.
+enable_testing()
 add_custom_target(coverage)
