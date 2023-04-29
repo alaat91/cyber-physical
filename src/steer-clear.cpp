@@ -17,8 +17,8 @@ int main(int argc, char **argv)
 
     if ((0 == commandlineArguments.count("name")) ||
         (0 == commandlineArguments.count("width")) ||
-        (0 == commandlineArguments.count("height")))
-    {
+        (0 == commandlineArguments.count("height"))) {
+
         std::cerr << argv[0] << " attaches to a shared memory area containing an ARGB image and transform it to HSV color space for inspection." << std::endl;
         std::cerr << "Usage: " << argv[0] << " --name=<name of shared memory area> --width=<W> --height=<H>" << std::endl;
         std::cerr << " --name: name of the shared memory area to attach" << std::endl;
@@ -26,11 +26,22 @@ int main(int argc, char **argv)
         std::cerr << " --height: height of the frame" << std::endl;
         std::cerr << "Example: " << argv[0] << " --name=img.argb --width=640 --height=480" << std::endl;
     }
-    else
-    {
+    else {
         const std::string NAME{commandlineArguments["name"]};
         const uint32_t WIDTH{static_cast<uint32_t>(std::stoi(commandlineArguments["width"]))};
         const uint32_t HEIGHT{static_cast<uint32_t>(std::stoi(commandlineArguments["height"]))};
+        int hasBlue = 0;
+        int hasYellow = 0;
+        bool blue = false;
+        bool yellow = false;
+        bool gsrbool = false;
+        int countYellow = 0;
+        int countBlue = 0;
+        int onlygsrblue = 0;
+        int onlyblue = 0;
+        int onlyyellow = 0;
+        int onlygsryellow = 0;
+        bool isSteeringDetermined = false;
 
         std::unique_ptr<cluon::SharedMemory> sharedMemory{new cluon::SharedMemory{NAME}};
 
@@ -50,7 +61,7 @@ int main(int argc, char **argv)
                 // https://github.com/chrberger/libcluon/blob/master/libcluon/testsuites/TestEnvelopeConverter.cpp#L31-L40
                 std::lock_guard<std::mutex> lck(gsrMutex);
                 gsr = cluon::extractMessage<opendlv::proxy::GroundSteeringRequest>(std::move(env));
-                std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
+                //std::cout << "lambda: groundSteering = " << gsr.groundSteering() << std::endl;
             };
 
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(), onGroundSteeringRequest);
@@ -59,49 +70,113 @@ int main(int argc, char **argv)
 
             while (od4.isRunning() && cv::waitKey(10))
             {
-                bool isBlueLeft = false;
+                // OpenCV data structure to hold an image.
+                cv::Mat img;
 
+                // Wait for a notification of a new frame.
                 sharedMemory->wait();
 
+                // Lock the shared memory.
                 sharedMemory->lock();
                 {
-                    std::memcpy(img.data, sharedMemory->data(), sharedMemory->size());
+                    // Copy the pixels from the shared memory into our own data structure.
+                    cv::Mat wrapped(HEIGHT, WIDTH, CV_8UC4, sharedMemory->data());
+                    img = wrapped.clone();
                 }
                 sharedMemory->unlock();
 
                 cv::Mat imgHSV;
+                cv::Mat imageLEFT;
                 cv::cvtColor(img, imgHSV, cv::COLOR_BGR2HSV);
-
-                if (!isSteeringDetermined)
-                {
-                    cv::Rect roi(0, 0, 320, 480);
-                    cv::Mat imageLEFT = imgHSV(roi);
-                    cv::Mat imgColorSpaceBLUE2;
-                    cv::inRange(imageLEFT, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBLUE2);
-                    int hasBlue = cv::countNonZero(imgColorSpaceBLUE2);
-                    if (hasBlue > 30)
-                    {
-                        isBlueLeft = true;
-                        std::cout << "BLUE detected!" << std::endl;
-                    }
-                    isSteeringDetermined = true;
-                }
-
-                {
-                    std::lock_guard<std::mutex> lck(gsrMutex);
-                    std::cout << "main: groundSteering = " << gsr.groundSteering() << std::endl;
-                }
-
+                // Draw the sample time point on the image
                 cv::Mat imgColorSpaceBLUE;
                 cv::inRange(imgHSV, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBLUE);
-                // cv::Mat imgColorSpaceYELLOW;
-                // cv::inRange(imgHSV, cv::Scalar(13, 58, 133), cv::Scalar(26, 255, 255), imgColorSpaceYELLOW);
-                cv::Mat imgColorSpace = imgColorSpaceBLUE;
-                cv::rectangle(img, cv::Point(150, 250), cv::Point(500, 400), cv::Scalar(0, 0, 255));
-                cv::rectangle(img, cv::Point(0, 150), cv::Point(200, 700), cv::Scalar(255, 0, 0));
+                cv::Mat imgColorSpaceYELLOW;
+                cv::inRange(imgHSV, cv::Scalar(13, 58, 133), cv::Scalar(26, 255, 255), imgColorSpaceYELLOW);
+                //cv::Mat imgColorSpace = imgColorSpaceBLUE;
+                cv::rectangle(img, cv::Point(180, 250), cv::Point(500, 400), cv::Scalar(0,0,255));
+                cv::Rect cent(180, 250, 350, 150);
+                cv::Mat imageCenter = imgColorSpaceBLUE(cent);
+                cv::Mat imageCenter2 = imgColorSpaceYELLOW(cent);
+                cv::imshow("Image", img);
+                cv::imshow("CENTER Color-Space Image", imageCenter);
+                cv::imshow("CENTER Color-Space Image2", imageCenter2);
 
-                cv::imshow("Color-Space Image", imgColorSpace);
-                cv::imshow(sharedMemory->name().c_str(), img);
+                //cv::rectangle(img, cv::Point(0, 150), cv::Point(200, 700), cv::Scalar(255,0,0));
+                hasBlue = 0;
+                hasBlue = cv::countNonZero(imageCenter);
+                // If you want to access the latest received ground steering, don't forget to lock the mutex:
+
+                {
+                    std::lock_guard <std::mutex> lck(gsrMutex);
+                    // this is when the car should turn right
+                    if (hasBlue > 250) {
+                        /*
+                        std::cout << "hasBlue=";
+                        std::cout << hasBlue;
+                         */
+                        // TODO: create logic to come up with some ground steering value
+                        blue = true;
+                    }
+                    // this is when the car actually turns right
+                    if (gsr.groundSteering() < 0) {
+                        //std::cout << " main: groundSteering = " << gsr.groundSteering() << std::endl;
+                        gsrbool = true;
+                    }
+                    if (blue && gsrbool){
+                        countBlue++;
+                    }
+                    if (blue && !gsrbool){
+                        onlyblue++;
+                    }
+                    if (!blue && gsrbool){
+                        onlygsrblue++;
+                    }
+                    std::cout << "Correct blue  : ";
+                    std::cout << countBlue << std::endl;
+                    std::cout << "onlyBlue      : ";
+                    std::cout << onlyblue << std::endl;
+                    std::cout << "only Gsr right: ";
+                    std::cout << onlygsrblue << std::endl;
+                    //std::cout << ourGroundSteering;
+                    //std::cout << gsr.groundSteering();
+                    blue = false;
+                    gsrbool = false;
+
+                    hasYellow = 0;
+                    hasYellow = cv::countNonZero(imageCenter2);
+                    // this is when the car should turn left
+                    if (hasYellow > 250) {
+
+                        // TODO: create logic to come up with some ground steering value
+                        yellow = true;
+                    }
+                    // this is when the car actually turns right
+                    if (gsr.groundSteering() > 0) {
+                        //std::cout << " main: groundSteering = " << gsr.groundSteering() << std::endl;
+                        gsrbool = true;
+                    }
+                    if (yellow && gsrbool){
+                        countYellow++;
+                    }
+                    if (yellow && !gsrbool){
+                        onlyyellow++;
+                    }
+                    if (!yellow && gsrbool){
+                        onlygsryellow++;
+                    }
+                    std::cout << "Correct yellow: ";
+                    std::cout << countYellow << std::endl;
+                    std::cout << "onlyYellow    : ";
+                    std::cout << onlyblue << std::endl;
+                    std::cout << "only Gsr left : ";
+                    std::cout << onlygsryellow << std::endl;
+                    //std::cout << ourGroundSteering;
+                    //std::cout << gsr.groundSteering();
+                    yellow = false;
+                    gsrbool = false;
+                }
+
             }
         }
         retCode = 0;
