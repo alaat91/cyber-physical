@@ -35,6 +35,7 @@ int main(int argc, char **argv)
         bool blue = false;
         bool yellow = false;
         bool gsrbool = false;
+        bool isBLueLeft = false;
         int countYellow = 0;
         int countBlue = 0;
         int onlygsrblue = 0;
@@ -102,6 +103,19 @@ int main(int argc, char **argv)
                 cv::imshow("CENTER Color-Space Image", imageCenter);
                 cv::imshow("CENTER Color-Space Image2", imageCenter2);
 
+                if (!isSteeringDetermined) {
+                    cv::Rect roi(0, 0, 320, 480);
+                    imageLEFT = imgHSV(roi);
+                    cv::Mat imgColorSpaceBLUE2;
+                    cv::inRange(imageLEFT, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBLUE);
+                    hasBlue = cv::countNonZero(imgColorSpaceBLUE2);
+                    if (hasBlue > 30) {
+                        isBLueLeft = true;
+                        std::cout << "BLUE detected!" << std::endl;
+                    }
+                    isSteeringDetermined = true;
+                }
+
                 //cv::rectangle(img, cv::Point(0, 150), cv::Point(200, 700), cv::Scalar(255,0,0));
                 hasBlue = 0;
                 hasBlue = cv::countNonZero(imageCenter);
@@ -119,9 +133,14 @@ int main(int argc, char **argv)
                         blue = true;
                     }
                     // this is when the car actually turns right
-                    if (gsr.groundSteering() < 0) {
-                        //std::cout << " main: groundSteering = " << gsr.groundSteering() << std::endl;
-                        gsrbool = true;
+                    if (isBLueLeft) {
+                        if (gsr.groundSteering() < 0) {
+                            gsrbool = true;
+                        }
+                    } else {
+                        if (gsr.groundSteering() > 0) {
+                            gsrbool = true;
+                        }
                     }
                     if (blue && gsrbool){
                         countBlue++;
@@ -147,14 +166,17 @@ int main(int argc, char **argv)
                     hasYellow = cv::countNonZero(imageCenter2);
                     // this is when the car should turn left
                     if (hasYellow > 250) {
-
                         // TODO: create logic to come up with some ground steering value
                         yellow = true;
                     }
-                    // this is when the car actually turns right
-                    if (gsr.groundSteering() > 0) {
-                        //std::cout << " main: groundSteering = " << gsr.groundSteering() << std::endl;
-                        gsrbool = true;
+                    if (isBLueLeft) {
+                        if (gsr.groundSteering() > 0) {
+                            gsrbool = true;
+                        }
+                    } else {
+                        if (gsr.groundSteering() < 0) {
+                            gsrbool = true;
+                        }
                     }
                     if (yellow && gsrbool){
                         countYellow++;
