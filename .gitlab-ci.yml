@@ -72,7 +72,6 @@ release:
 coverage:
   image: alpine:latest
   tags:
-    - docker-build
     - docker
   stage: test
   before_script:
