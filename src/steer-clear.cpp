@@ -106,9 +106,10 @@ int main(int argc, char **argv)
                 if (!isSteeringDetermined) {
                     cv::Rect roi(0, 0, 320, 480);
                     imageLEFT = imgHSV(roi);
-                    cv::Mat imgColorSpaceBLUE2;
+                    cv::Mat imgColorSpaceBLUE;
                     cv::inRange(imageLEFT, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBLUE);
-                    hasBlue = cv::countNonZero(imgColorSpaceBLUE2);
+                    cv::imshow("LEFT", imgColorSpaceBLUE);
+                    hasBlue = cv::countNonZero(imgColorSpaceBLUE);
                     if (hasBlue > 30) {
                         isBLueLeft = true;
                         std::cout << "BLUE detected!" << std::endl;
