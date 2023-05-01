@@ -12,7 +12,7 @@ void calculateStats(
     bool blue = false;
     bool yellow = false;
     bool gsrbool = false;
-    int countYellow = 0;
+    static int countYellow = 0;
     static int countBlue = 0;
     static int onlygsrblue = 0;
     static int onlyblue = 0;
