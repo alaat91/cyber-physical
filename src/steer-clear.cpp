@@ -3,8 +3,11 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
+#include <cstdlib>
+
 #include "utils/stats.hpp"
 
+float getGSR(cv::Mat colorSpace, bool isBlueLeft);
 
 int main(int argc, char **argv)
 {
@@ -75,26 +78,26 @@ int main(int argc, char **argv)
                 cv::Mat imgHSV;
                 cv::Mat imageLEFT;
                 cv::cvtColor(img, imgHSV, cv::COLOR_BGR2HSV);
-                cv::Mat imgColorSpaceBLUE;
-                cv::inRange(imgHSV, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBLUE);
-                cv::Mat imgColorSpaceYELLOW;
-                cv::inRange(imgHSV, cv::Scalar(13, 58, 133), cv::Scalar(26, 255, 255), imgColorSpaceYELLOW);
+                cv::Mat imgColorSpaceBlue;
+                cv::inRange(imgHSV, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBlue);
+                cv::Mat imgColorSpaceYellow;
+                cv::inRange(imgHSV, cv::Scalar(13, 58, 133), cv::Scalar(26, 255, 255), imgColorSpaceYellow);
                 cv::rectangle(img, cv::Point(180, 250), cv::Point(500, 400), cv::Scalar(0, 0, 255));
 
                 cv::Rect cent(180, 250, 350, 150);
-                cv::Mat imgCenterBlue = imgColorSpaceBLUE(cent);
-                cv::Mat imgCenterYellow = imgColorSpaceYELLOW(cent);
-                cv::imshow("Image", img);
-                cv::imshow("Center-Frame Color-Space Blue", imgCenterBlue);
-                cv::imshow("Center-Frame Color-Space Yellow", imgCenterYellow);
+                cv::Mat imgCenterBlue = imgColorSpaceBlue(cent);
+                cv::Mat imgCenterYellow = imgColorSpaceYellow(cent);
+                // cv::imshow("Image", img);
+                // cv::imshow("Center-Frame Color-Space Blue", imgCenterBlue);
+                // cv::imshow("Center-Frame Color-Space Yellow", imgCenterYellow);
 
                 if (!isSteeringDetermined)
                 {
                     cv::Rect roi(0, 0, 320, 480);
                     imageLEFT = imgHSV(roi);
-                    cv::inRange(imageLEFT, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBLUE);
-                    cv::imshow("LEFT", imgColorSpaceBLUE);
-                    int bluePixels = cv::countNonZero(imgColorSpaceBLUE);
+                    cv::inRange(imageLEFT, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBlue);
+                    //cv::imshow("LEFT", imgColorSpaceBlue);
+                    int bluePixels = cv::countNonZero(imgColorSpaceBlue);
                     if (bluePixels > 30)
                     {
                         isBlueLeft = true;
@@ -105,13 +108,53 @@ int main(int argc, char **argv)
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
-
                     std::lock_guard<std::mutex> lck(gsrMutex);
-                    calculateStats(imgCenterBlue, imgCenterYellow, gsr, isBlueLeft);
+                    // calculateStats(imgCenterBlue, imgCenterYellow, gsr, isBlueLeft);
+                    float g1 = gsr.groundSteering();
+                    float g2 = getGSR(imgColorSpaceBlue, isBlueLeft);
+                    float g3 = getGSR(imgColorSpaceYellow, isBlueLeft);
+                    float g4 = (g2 + g3) / 2;
+
+                    if (g2 == 0 || g3 == 0)
+                    {
+                        g4 = g2 + g3;
+                    }
+
+                    float e = ((abs(g1 - g4)) / abs(g1)) * 100;
+                    // std::cout << "Original Steering: " << g1 << std::endl;
+                    // std::cout << "Ground Steering: " << g4 << std::endl;
+                    // std::cout << "Error: " << e << std::endl;
                 }
+                
+                writePixels(cv::countNonZero(imgCenterBlue), cv::countNonZero(imgCenterYellow), gsr.groundSteering());
+                cv::imshow("Color-Space Blue", imgColorSpaceBlue);
+
             }
         }
         retCode = 0;
     }
     return retCode;
+}
+
+float getGSR(cv::Mat colorSpace, bool isBlueLeft)
+{
+
+    int pixels = cv::countNonZero(colorSpace);
+
+    float COLOR_THRESHOLD = 300;
+    float SCALING_FACTOR = 1;
+    float INPUT_LOWER_BOUND = 0;
+    float INPUT_UPPER_BOUND = 1000;
+
+    float OUTPUT_LOWER_BOUND = 0;
+    float OUTPUT_UPPER_BOUND = 0.3;
+
+    if (pixels < COLOR_THRESHOLD)
+        return 0.0;
+
+    float colorAmount = pixels * SCALING_FACTOR;
+    float slope = (OUTPUT_UPPER_BOUND - OUTPUT_LOWER_BOUND) / (INPUT_UPPER_BOUND - INPUT_LOWER_BOUND);
+    float gsr = slope * (colorAmount - INPUT_LOWER_BOUND);
+
+    return gsr;
 }

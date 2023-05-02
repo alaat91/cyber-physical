@@ -1,10 +1,10 @@
 #include "stats.hpp"
 
 void calculateStats(
-        cv::Mat imgCenterBlue,
-        cv::Mat imgCenterYellow,
-        opendlv::proxy::GroundSteeringRequest gsr,
-        bool isBlueLeft)
+    cv::Mat imgCenterBlue,
+    cv::Mat imgCenterYellow,
+    opendlv::proxy::GroundSteeringRequest gsr,
+    bool isBlueLeft)
 {
 
     static int hasBlue = 0;
@@ -24,29 +24,39 @@ void calculateStats(
     hasBlue = cv::countNonZero(imgCenterBlue);
 
     // this is when the car should turn right
-    if (hasBlue > 250) {
+    if (hasBlue > 250)
+    {
         blue = true;
     }
     // this is when the car actually turns right
-    if (isBlueLeft) {
-        if (gsr.groundSteering() < 0) {
-            gsrbool = true;
-        }
-    } else {
-        if (gsr.groundSteering() > 0) {
+    if (isBlueLeft)
+    {
+        if (gsr.groundSteering() < 0)
+        {
             gsrbool = true;
         }
     }
-    if (blue && gsrbool){
+    else
+    {
+        if (gsr.groundSteering() > 0)
+        {
+            gsrbool = true;
+        }
+    }
+    if (blue && gsrbool)
+    {
         countBlue++;
     }
-    if (blue && !gsrbool){
+    if (blue && !gsrbool)
+    {
         onlyblue++;
     }
-    if (!blue && gsrbool){
+    if (!blue && gsrbool)
+    {
         onlygsrblue++;
     }
-    if (!blue && !gsrbool){
+    if (!blue && !gsrbool)
+    {
         emptyBlue++;
     }
     // Our algorithm turns the car when it should
@@ -68,30 +78,40 @@ void calculateStats(
     hasYellow = 0;
     hasYellow = cv::countNonZero(imgCenterYellow);
     // this is when the car should turn left
-    if (hasYellow > 250) {
+    if (hasYellow > 250)
+    {
         yellow = true;
     }
 
-    if (isBlueLeft) {
-        if (gsr.groundSteering() > 0) {
+    if (isBlueLeft)
+    {
+        if (gsr.groundSteering() > 0)
+        {
             gsrbool = true;
         }
-    } else {
-        if (gsr.groundSteering() < 0) {
+    }
+    else
+    {
+        if (gsr.groundSteering() < 0)
+        {
             gsrbool = true;
         }
     }
 
-    if (yellow && gsrbool){
+    if (yellow && gsrbool)
+    {
         countYellow++;
     }
-    if (yellow && !gsrbool){
+    if (yellow && !gsrbool)
+    {
         onlyyellow++;
     }
-    if (!yellow && gsrbool){
+    if (!yellow && gsrbool)
+    {
         onlygsryellow++;
     }
-    if (!yellow && !gsrbool){
+    if (!yellow && !gsrbool)
+    {
         emptyYellow++;
     }
     // Our algorithm turns the car when it should
@@ -109,4 +129,12 @@ void calculateStats(
 
     yellow = false;
     gsrbool = false;
+}
+
+void writePixels(float bluePixels, float YellowPixels, float gsr)
+{
+    std::ofstream myfile;
+    myfile.open("/host/res.csv", std::ios_base::app);
+    myfile << bluePixels << "," << YellowPixels << "," << gsr << ";\n";
+    myfile.close();
 }
