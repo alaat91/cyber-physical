@@ -98,6 +98,8 @@ int main(int argc, char **argv)
                     cv::inRange(imageLEFT, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBlue);
                     //cv::imshow("LEFT", imgColorSpaceBlue);
                     int bluePixels = cv::countNonZero(imgColorSpaceBlue);
+                    std::cout << "BLUE pixels: ";
+                    std::cout << bluePixels << std::endl;
                     if (bluePixels > 30)
                     {
                         isBlueLeft = true;
