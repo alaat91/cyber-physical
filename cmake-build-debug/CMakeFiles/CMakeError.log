@@ -1,0 +1,57 @@
+Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD failed with the following output:
+Change Dir: /Users/arminbalesic/Library/Mobile Documents/com~apple~CloudDocs/2023-group-06/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-tAVWUb
+
+Run Build Command(s):/Applications/CLion.app/Contents/bin/ninja/mac/ninja cmTC_5cc22 && [1/2] Building C object CMakeFiles/cmTC_5cc22.dir/src.c.o
+[2/2] Linking C executable cmTC_5cc22
+FAILED: cmTC_5cc22 
+: && /Library/Developer/CommandLineTools/usr/bin/cc -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names -static-libgcc -static-libstdc++ CMakeFiles/cmTC_5cc22.dir/src.c.o -o cmTC_5cc22   && :
+clang: error: unsupported option '-static-libgcc'
+ninja: build stopped: subcommand failed.
+
+
+Source file was:
+#include <pthread.h>
+
+static void* test_func(void* data)
+{
+  return data;
+}
+
+int main(void)
+{
+  pthread_t thread;
+  pthread_create(&thread, NULL, test_func, NULL);
+  pthread_detach(thread);
+  pthread_cancel(thread);
+  pthread_join(thread, NULL);
+  pthread_atfork(NULL, NULL, NULL);
+  pthread_exit(NULL);
+
+  return 0;
+}
+
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /Users/arminbalesic/Library/Mobile Documents/com~apple~CloudDocs/2023-group-06/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-6z5tXD
+
+Run Build Command(s):/Applications/CLion.app/Contents/bin/ninja/mac/ninja cmTC_c8825 && [1/2] Building C object CMakeFiles/cmTC_c8825.dir/CheckFunctionExists.c.o
+[2/2] Linking C executable cmTC_c8825
+FAILED: cmTC_c8825 
+: && /Library/Developer/CommandLineTools/usr/bin/cc -DCHECK_FUNCTION_EXISTS=pthread_create -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names -static-libgcc -static-libstdc++ CMakeFiles/cmTC_c8825.dir/CheckFunctionExists.c.o -o cmTC_c8825  -lpthreads && :
+clang: error: unsupported option '-static-libgcc'
+ninja: build stopped: subcommand failed.
+
+
+
+Determining if the function pthread_create exists in the pthread failed with the following output:
+Change Dir: /Users/arminbalesic/Library/Mobile Documents/com~apple~CloudDocs/2023-group-06/cmake-build-debug/CMakeFiles/CMakeScratch/TryCompile-fdl8pS
+
+Run Build Command(s):/Applications/CLion.app/Contents/bin/ninja/mac/ninja cmTC_bf038 && [1/2] Building C object CMakeFiles/cmTC_bf038.dir/CheckFunctionExists.c.o
+[2/2] Linking C executable cmTC_bf038
+FAILED: cmTC_bf038 
+: && /Library/Developer/CommandLineTools/usr/bin/cc -DCHECK_FUNCTION_EXISTS=pthread_create -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names -static-libgcc -static-libstdc++ CMakeFiles/cmTC_bf038.dir/CheckFunctionExists.c.o -o cmTC_bf038  -lpthread && :
+clang: error: unsupported option '-static-libgcc'
+ninja: build stopped: subcommand failed.
+
+
+

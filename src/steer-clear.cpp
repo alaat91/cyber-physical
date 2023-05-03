@@ -4,6 +4,8 @@
 #include <opencv2/imgproc.hpp>
 
 #include "utils/stats.hpp"
+#include <iostream>
+#include <iomanip> // include the header file for setprecision
 
 
 int main(int argc, char **argv)
@@ -55,6 +57,29 @@ int main(int argc, char **argv)
 
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(), onGroundSteeringRequest);
 
+            opendlv::proxy::VoltageReading leftVoltage;  // Declare an instance of opendlv::proxy::VoltageReading called "leftVoltage".
+            opendlv::proxy::VoltageReading rightVoltage; // Declare an instance of opendlv::proxy::VoltageReading called "rightVoltage".
+
+            std::mutex voltageMutex; // Declare a mutex object called "voltageMutex" to protect the shared voltage readings.
+
+            auto VoltageReading = [&](cluon::data::Envelope &&envelope) // Declare a lambda function called "VoltageReading" that takes a cluon::data::Envelope by rvalue reference.
+            {
+                std::lock_guard<std::mutex> lck(voltageMutex); // Lock the "voltageMutex" so that only one thread can access the shared voltage readings at a time.
+
+                leftVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope)); // Extract the left voltage reading from the cluon::data::Envelope and store it in "leftVoltage".
+                rightVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope)); // Extract the right voltage reading from the cluon::data::Envelope and store it in "rightVoltage".
+
+                if (envelope.senderStamp() == 1) { // If the sender ID of the envelope is 1 (left IR sensor):
+                    std::cout << "Left Sensor Voltage: " << std::fixed << std::setprecision(10) << leftVoltage.voltage() << std::endl; // Print the left voltage reading to the console.
+                }
+
+                if (envelope.senderStamp() == 3) { // If the sender ID of the envelope is 3 (right IR sensor):
+                    std::cout << "Right Sensor Voltage: " << std::fixed << std::setprecision(10) << rightVoltage.voltage() << std::endl; // Print the right voltage reading to the console.
+                }
+            };
+
+            od4.dataTrigger(opendlv::proxy::VoltageReading::ID(), VoltageReading); // Trigger the "VoltageReading" lambda function when a message with the ID of opendlv::proxy::VoltageReading is received.
+
             while (od4.isRunning() && cv::waitKey(10))
             {
                 // OpenCV data structure to hold an image.
@@ -105,9 +130,9 @@ int main(int argc, char **argv)
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
-
                     std::lock_guard<std::mutex> lck(gsrMutex);
                     calculateStats(imgCenterBlue, imgCenterYellow, gsr, isBlueLeft);
+                    std::cout << "Actual GroundSteeringRequest = " << gsr.groundSteering() << std::endl;
                 }
             }
         }
