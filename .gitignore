@@ -1,3 +1,4 @@
 build/
 setup.sh
 **/.DS_Store
+.vscode/

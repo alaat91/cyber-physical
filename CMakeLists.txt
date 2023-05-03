@@ -92,8 +92,15 @@ include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
 set(LIBRARIES ${LIBRARIES} ${OpenCV_LIBS})
 
 ################################################################################
+# Add additional source files
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/utils)
+
+set(SOURCE_FILES ${SOURCE_FILES} src/utils/stats.cpp)
+set(HEADER_FILES ${HEADER_FILES} src/utils/stats.hpp)
+
+################################################################################
 # Create executable.
-add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.cpp)
+add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.cpp ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 
 # Add dependency to OpenDLV Standard Message Set.
