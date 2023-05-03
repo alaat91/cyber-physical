@@ -101,6 +101,8 @@ int main(int argc, char **argv)
                     if (bluePixels > 30)
                     {
                         isBlueLeft = true;
+                        std::cout << "BLUE pixels: ";
+                        std::cout << bluePixels << std::endl;
                         std::cout << "BLUE detected!" << std::endl;
                     }
                     isSteeringDetermined = true;
