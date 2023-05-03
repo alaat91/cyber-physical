@@ -92,6 +92,7 @@ Use the body to explain what and why vs. how https://cbea.ms/git-commit/#why-not
 * [G++](https://gcc.gnu.org/) - Compiler
 * [CMake](https://cmake.org/) - Build system
 * [Make](https://www.gnu.org/software/make/) - Build automation tool
+* [OpenCV](https://opencv.org/) - Computer Vision
 
 ## Authors
 

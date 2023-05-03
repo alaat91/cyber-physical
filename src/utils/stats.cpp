@@ -7,11 +7,11 @@ void calculateStats(
     bool isBlueLeft)
 {
 
-    static int hasBlue = 0;
-    static int hasYellow = 0;
-    static bool blue = false;
-    static bool yellow = false;
-    static bool gsrbool = false;
+    int bluePixelAmount = 0;
+    int yellowPixelAmount = 0;
+    bool blue = false;
+    bool yellow = false;
+    bool gsrbool = false;
     static int countYellow = 0;
     static int countBlue = 0;
     static int onlygsrblue = 0;
@@ -21,11 +21,9 @@ void calculateStats(
     static int emptyBlue = 0;
     static int emptyYellow = 0;
 
-    hasBlue = cv::countNonZero(imgCenterBlue);
-
+    bluePixelAmount = cv::countNonZero(imgCenterBlue);
     // this is when the car should turn right
-    if (hasBlue > 250)
-    {
+    if (bluePixelAmount > 250) {
         blue = true;
     }
     // this is when the car actually turns right
@@ -72,21 +70,17 @@ void calculateStats(
     std::cout << "Neither output: ";
     std::cout << emptyBlue << std::endl;
 
-    blue = false;
-    gsrbool = false;
+    yellowPixelAmount = cv::countNonZero(imgCenterYellow);
 
-    hasYellow = 0;
-    hasYellow = cv::countNonZero(imgCenterYellow);
     // this is when the car should turn left
-    if (hasYellow > 250)
-    {
+    if (yellowPixelAmount > 250) {
         yellow = true;
     }
 
-    if (isBlueLeft)
-    {
-        if (gsr.groundSteering() > 0)
-        {
+    gsrbool = false;
+
+    if (isBlueLeft) {
+        if (gsr.groundSteering() > 0) {
             gsrbool = true;
         }
     }
