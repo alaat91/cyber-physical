@@ -7,7 +7,10 @@
 
 #include "utils/stats.hpp"
 
-float getGSR(cv::Mat colorSpace, bool isBlueLeft);
+float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, bool isBlueLeft);
+
+float correctFrames = 0;
+float totalFrames = 0;
 
 int main(int argc, char **argv)
 {
@@ -115,24 +118,26 @@ int main(int argc, char **argv)
                     std::lock_guard<std::mutex> lck(gsrMutex);
                     // calculateStats(imgCenterBlue, imgCenterYellow, gsr, isBlueLeft);
                     float g1 = gsr.groundSteering();
-                    float g2 = getGSR(imgColorSpaceBlue, isBlueLeft);
-                    float g3 = getGSR(imgColorSpaceYellow, isBlueLeft);
-                    float g4 = (g2 + g3) / 2;
-
-                    if (g2 == 0 || g3 == 0)
-                    {
-                        g4 = g2 + g3;
+                    float g2 = getGSR(imgCenterBlue, imgCenterYellow, isBlueLeft);
+                    float e = ((abs(g1 - g2)) / abs(g1)) * 100;
+                    if(g1 == 0){
+                        e = abs(g1-g2);
                     }
+                    std::cout << "Original Steering: " << g1 << std::endl;
+                    std::cout << "Ground Steering: " << g2 << std::endl;
+                    std::cout << "Error: " << e << std::endl;
 
-                    float e = ((abs(g1 - g4)) / abs(g1)) * 100;
-                    // std::cout << "Original Steering: " << g1 << std::endl;
-                    // std::cout << "Ground Steering: " << g4 << std::endl;
-                    // std::cout << "Error: " << e << std::endl;
+                    if (g1 != 0 && e <= 30 ){
+                        correctFrames++;
+                    } else if(g1==0 && abs(g1-g2) < 0.05) {
+                        correctFrames++;
+                    }
+                    totalFrames++;
                 }
                 
-                writePixels(cv::countNonZero(imgCenterBlue), cv::countNonZero(imgCenterYellow), gsr.groundSteering());
+                //writePixels(cv::countNonZero(imgCenterBlue), cv::countNonZero(imgCenterYellow), gsr.groundSteering());
                 cv::imshow("Color-Space Blue", imgColorSpaceBlue);
-
+                std::cout << "Frame Stats:" << correctFrames << "/" << totalFrames << "\t" << ((correctFrames/totalFrames)*100) << " %" << std::endl;
             }
         }
         retCode = 0;
@@ -140,25 +145,30 @@ int main(int argc, char **argv)
     return retCode;
 }
 
-float getGSR(cv::Mat colorSpace, bool isBlueLeft)
+float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, bool isBlueLeft)
 {
+    float gsr = 0;
+    int bluePixels = cv::countNonZero(centerBlue);
+    int yellowPixels = cv::countNonZero(centerYellow);
 
-    int pixels = cv::countNonZero(colorSpace);
-
-    float COLOR_THRESHOLD = 300;
-    float SCALING_FACTOR = 1;
+    float COLOR_THRESHOLD = 240;
     float INPUT_LOWER_BOUND = 0;
-    float INPUT_UPPER_BOUND = 1000;
+    float INPUT_UPPER_BOUND = 1200;
 
     float OUTPUT_LOWER_BOUND = 0;
-    float OUTPUT_UPPER_BOUND = 0.3;
+    float OUTPUT_UPPER_BOUND = 0.21;
 
-    if (pixels < COLOR_THRESHOLD)
-        return 0.0;
+    float slope = (OUTPUT_UPPER_BOUND - OUTPUT_LOWER_BOUND) / (INPUT_UPPER_BOUND - INPUT_LOWER_BOUND); 
 
-    float colorAmount = pixels * SCALING_FACTOR;
-    float slope = (OUTPUT_UPPER_BOUND - OUTPUT_LOWER_BOUND) / (INPUT_UPPER_BOUND - INPUT_LOWER_BOUND);
-    float gsr = slope * (colorAmount - INPUT_LOWER_BOUND);
+    if(isBlueLeft && bluePixels > COLOR_THRESHOLD){
+        gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+    } else if(!isBlueLeft && bluePixels > COLOR_THRESHOLD){
+        gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+    } else if (isBlueLeft && yellowPixels > COLOR_THRESHOLD){
+        gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+    } else if(!isBlueLeft && yellowPixels > COLOR_THRESHOLD){
+        gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+    }
 
     return gsr;
 }
