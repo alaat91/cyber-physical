@@ -119,9 +119,10 @@ int main(int argc, char **argv)
                     // calculateStats(imgCenterBlue, imgCenterYellow, gsr, isBlueLeft);
                     float g1 = gsr.groundSteering();
                     float g2 = getGSR(imgCenterBlue, imgCenterYellow, isBlueLeft);
-                    float e = ((abs(g1 - g2)) / abs(g1)) * 100;
+                    float e = ((fabs(g1 - g2)) / fabs(g1)) * 100;
+                    
                     if(g1 == 0){
-                        e = abs(g1-g2);
+                        e = fabs(g1-g2);
                     }
                     std::cout << "Original Steering: " << g1 << std::endl;
                     std::cout << "Ground Steering: " << g2 << std::endl;
@@ -129,10 +130,11 @@ int main(int argc, char **argv)
 
                     if (g1 != 0 && e <= 30 ){
                         correctFrames++;
-                    } else if(g1==0 && abs(g1-g2) < 0.05) {
+                    } else if(g1==0 && fabs(g1-g2) < 0.05) {
                         correctFrames++;
                     }
                     totalFrames++;
+                    
                 }
                 
                 //writePixels(cv::countNonZero(imgCenterBlue), cv::countNonZero(imgCenterYellow), gsr.groundSteering());
