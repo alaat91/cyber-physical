@@ -23,7 +23,8 @@ void calculateStats(
 
     bluePixelAmount = cv::countNonZero(imgCenterBlue);
     // this is when the car should turn right
-    if (bluePixelAmount > 250) {
+    if (bluePixelAmount > 250)
+    {
         blue = true;
     }
     // this is when the car actually turns right
@@ -73,14 +74,17 @@ void calculateStats(
     yellowPixelAmount = cv::countNonZero(imgCenterYellow);
 
     // this is when the car should turn left
-    if (yellowPixelAmount > 250) {
+    if (yellowPixelAmount > 250)
+    {
         yellow = true;
     }
 
     gsrbool = false;
 
-    if (isBlueLeft) {
-        if (gsr.groundSteering() > 0) {
+    if (isBlueLeft)
+    {
+        if (gsr.groundSteering() > 0)
+        {
             gsrbool = true;
         }
     }
@@ -131,4 +135,31 @@ void writePixels(float bluePixels, float YellowPixels, float gsr, float calcGsr)
     myfile.open("/host/res.csv", std::ios_base::app);
     myfile << bluePixels << "," << YellowPixels << "," << gsr << "," << calcGsr << ";\n";
     myfile.close();
+}
+
+void determineError(float g1, float g2)
+{
+    static float totalFrames = 0;
+    static float correctFrames = 0;
+
+    float e = ((fabs(g1 - g2)) / fabs(g1)) * 100;
+
+    if (g1 == 0)
+    {
+        e = fabs(g1 - g2);
+    }
+    std::cout << "Original Steering: " << g1 << std::endl;
+    std::cout << "Ground Steering: " << g2 << std::endl;
+    std::cout << "Error: " << e << std::endl;
+
+    if (g1 != 0 && e <= 30)
+    {
+        correctFrames++;
+    }
+    else if (g1 == 0 && fabs(g1 - g2) < 0.05)
+    {
+        correctFrames++;
+    }
+    totalFrames++;
+    std::cout << "Frame Stats:" << correctFrames << "/" << totalFrames << "\t" << ((correctFrames / totalFrames) * 100) << " %" << std::endl;
 }

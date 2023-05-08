@@ -9,9 +9,6 @@
 
 float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, bool isBlueLeft);
 
-float correctFrames = 0;
-float totalFrames = 0;
-
 int main(int argc, char **argv)
 {
     int retCode{1};
@@ -132,31 +129,12 @@ int main(int argc, char **argv)
                     // calculateStats(imgCenterBlue, imgCenterYellow, gsr, isBlueLeft);
                     float g1 = gsr.groundSteering();
                     float g2 = getGSR(imgCenterBlue, imgCenterYellow, isBlueLeft);
-                    float e = ((fabs(g1 - g2)) / fabs(g1)) * 100;
-
-                    if (g1 == 0)
-                    {
-                        e = fabs(g1 - g2);
-                    }
-                    std::cout << "Original Steering: " << g1 << std::endl;
-                    std::cout << "Ground Steering: " << g2 << std::endl;
-                    std::cout << "Error: " << e << std::endl;
-
-                    if (g1 != 0 && e <= 30)
-                    {
-                        correctFrames++;
-                    }
-                    else if (g1 == 0 && fabs(g1 - g2) < 0.05)
-                    {
-                        correctFrames++;
-                    }
-                    totalFrames++;
+                    determineError(g1, g2);
                     // writePixels(cv::countNonZero(imgCenterBlue), cv::countNonZero(imgCenterYellow), gsr.groundSteering(), g2);
                 }
 
                 cv::imshow("Color-Space Yellow", imgCenterYellow);
                 cv::imshow("Color-Space Blue", imgCenterBlue);
-                std::cout << "Frame Stats:" << correctFrames << "/" << totalFrames << "\t" << ((correctFrames / totalFrames) * 100) << " %" << std::endl;
             }
         }
         retCode = 0;

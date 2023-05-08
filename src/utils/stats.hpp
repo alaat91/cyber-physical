@@ -14,4 +14,6 @@ void calculateStats(
 
 void writePixels(float bluePixels, float YellowPixels, float gsr, float calcGsr);
 
+void determineError(float g1, float g2);
+
 #endif // STATS_HPP
