@@ -134,10 +134,10 @@ int main(int argc, char **argv)
                         correctFrames++;
                     }
                     totalFrames++;
-                    
+                    //writePixels(cv::countNonZero(imgCenterBlue), cv::countNonZero(imgCenterYellow), gsr.groundSteering(), g2);
+
                 }
                 
-                //writePixels(cv::countNonZero(imgCenterBlue), cv::countNonZero(imgCenterYellow), gsr.groundSteering());
                 cv::imshow("Color-Space Blue", imgColorSpaceBlue);
                 std::cout << "Frame Stats:" << correctFrames << "/" << totalFrames << "\t" << ((correctFrames/totalFrames)*100) << " %" << std::endl;
             }
