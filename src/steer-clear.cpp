@@ -45,7 +45,7 @@ int main(int argc, char **argv)
         std::ofstream csvFile;
 
         // Open the file "data.csv" with the "append" flag
-        csvFile.open("data.csv", std::ios_base::app);
+        csvFile.open("/host/data.csv", std::ios_base::app);
 
         // Check if the file was opened successfully
         if (!csvFile.is_open()) {
@@ -112,11 +112,7 @@ int main(int argc, char **argv)
                 }
 
                 // print value of steeringWheelAngle to console.
-                std::cout << "steeringWheelAngle: " << std::fixed << std::setprecision(6) << steeringWheelAngle << std::endl;
-
-                // write value of steeringWheelAngle to csvFile.
-                csvFile << steeringWheelAngle;
-
+                //std::cout << "steeringWheelAngle: " << std::fixed << std::setprecision(6) << steeringWheelAngle << std::endl;
             };
 
             od4.dataTrigger(opendlv::proxy::VoltageReading::ID(), VoltageReading); // Trigger the "VoltageReading" lambda function when a message with the ID of opendlv::proxy::VoltageReading is received.
@@ -136,7 +132,11 @@ int main(int argc, char **argv)
                     cv::Mat wrapped(HEIGHT, WIDTH, CV_8UC4, sharedMemory->data());
                     img = wrapped.clone();
                 }
+                int64_t sampleTimeStamp = cluon::time::toMicroseconds(sharedMemory->getTimeStamp().second);
                 sharedMemory->unlock();
+                std::stringstream final;
+                final << sampleTimeStamp;
+                //std::cout << "group_06;" << final.str() << ";" << steeringWheelAngle << std::endl;
 
                 cv::Mat imgHSV;
                 cv::Mat imageLEFT;
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
                 cv::Rect cent(180, 250, 350, 150);
                 cv::Mat imgCenterBlue = imgColorSpaceBLUE(cent);
                 cv::Mat imgCenterYellow = imgColorSpaceYELLOW(cent);
-                cv::imshow("Image", img);
+                //cv::imshow("Image", img);
                 cv::imshow("Center-Frame Color-Space Blue", imgCenterBlue);
                 cv::imshow("Center-Frame Color-Space Yellow", imgCenterYellow);
 
@@ -178,8 +178,8 @@ int main(int argc, char **argv)
                     calculateStats(imgCenterBlue, imgCenterYellow, gsr, isBlueLeft);
 
                     // Output the ground steering request and the current steering wheel angle
-                    std::cout << "GroundSteeringRequest: " << gsr.groundSteering() << std::endl;
-                    std::cout << "steeringWheelAngle: " << std::fixed << std::setprecision(6) << steeringWheelAngle << std::endl;
+                    //std::cout << "GroundSteeringRequest: " << gsr.groundSteering() << std::endl;
+                    //std::cout << "steeringWheelAngle: " << std::fixed << std::setprecision(6) << steeringWheelAngle << std::endl;
 
                     // Calculate the error between the ground steering and the actual steering
                     float groundSteering = gsr.groundSteering();
@@ -191,9 +191,9 @@ int main(int argc, char **argv)
                     }
 
                     // Output the original and ground steering angles, as well as the error
-                    std::cout << "Original Steering: " << groundSteering << std::endl;
-                    std::cout << "Ground Steering: " << steeringWheelAngle << std::endl;
-                    std::cout << "Error: " << error << std::endl;
+                    //std::cout << "Original Steering: " << groundSteering << std::endl;
+                    //std::cout << "Ground Steering: " << steeringWheelAngle << std::endl;
+                    //std::cout << "Error: " << error << std::endl;
 
                     // If the ground steering is not zero and the error is less than or equal to 30, increment the correct frames counter
                     // Otherwise, if the ground steering is zero and the absolute difference between the two steering angles is less than 0.05, increment the correct frames counter
@@ -204,13 +204,20 @@ int main(int argc, char **argv)
                         correctFrames++;
                     }
 
+                    // write value of steeringWheelAngle to csvFile.
+                    csvFile << "GroundSteeringRequest -> " << groundSteering << "; " << "sampleTimeStamp -> " << final.str() << "; " << "steeringWheelAngle -> " << steeringWheelAngle << std::endl;
+
+                    // print A20 requirement
+                    std::cout << "group_06;" << final.str() << ";" << steeringWheelAngle << std::endl;
+
+
                     // Increment the total frames counter
                     totalFrames++;
                 }
 
                 // Output the frame statistics (i.e., the number of correct frames and the total number of frames processed)
                 // as well as the percentage of correct frames
-                std::cout << "Frame Stats:" << std::setprecision(0) << correctFrames << "/" << std::setprecision(0) << totalFrames << "\t" << ((correctFrames/totalFrames)*100) << " %" << std::endl;
+                //std::cout << "Frame Stats:" << std::setprecision(0) << correctFrames << "/" << std::setprecision(0) << totalFrames << "\t" << ((correctFrames/totalFrames)*100) << " %" << std::endl;
 
             }
         }
