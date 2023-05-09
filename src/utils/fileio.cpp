@@ -15,7 +15,7 @@ void write_header_row(const std::string& filename) {
     }
 
     // Write the header row to the file
-    file << "GroundSteeringRequest,sampleTimeStamp,previous_commit,current_commit" << std::endl;
+    file << "GroundSteeringRequest, sampleTimeStamp, previous_commit,current_commit" << std::endl;
 
     // Flush and close the file stream
     file.flush();

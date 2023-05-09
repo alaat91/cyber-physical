@@ -202,7 +202,7 @@ int main(int argc, char **argv)
                     // Check if file exists and write header row if not
                     if (!std::ifstream(filename)) {
                     write_header_row(filename);
-                    }
+                     }
 
                     // Read the previous commit value from the CSV file and update the previous and current commit values
                     int previous_commit = read_file(filename);
@@ -212,8 +212,7 @@ int main(int argc, char **argv)
                     std::stringstream file_data;
 
                     // Append formatted data to the string stream "data"
-                    file_data << "GroundSteeringRequest = " << groundSteering << ", "
-                              << "sampleTimeStamp = " << final.str() << ", ";
+                    file_data << groundSteering << ", " << final.str() << ", ";
 
                     // Write the previous and current commit values to the CSV file
                     write_file(filename, std::to_string(previous_commit), std::to_string(new_previous_commit), file_data.str());
