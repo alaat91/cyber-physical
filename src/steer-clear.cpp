@@ -83,9 +83,10 @@ int main(int argc, char **argv)
                 cv::inRange(imgHSV, cv::Scalar(13, 58, 133), cv::Scalar(26, 255, 255), imgColorSpaceYellow);
                 cv::rectangle(img, cv::Point(180, 250), cv::Point(500, 400), cv::Scalar(0, 0, 255));
 
-                cv::Rect cent(180, 250, 350, 150);
+                cv::Rect cent(160, 250, 330, 150);
+                cv::Rect cent2(180, 250, 370, 150);
                 cv::Mat imgCenterBlue = imgColorSpaceBlue(cent);
-                cv::Mat imgCenterYellow = imgColorSpaceYellow(cent);
+                cv::Mat imgCenterYellow = imgColorSpaceYellow(cent2);
 
                 if (!isSteeringDetermined)
                 {
@@ -148,7 +149,7 @@ float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, bool isBlueLeft)
     int bluePixels = cv::countNonZero(centerBlue);
     int yellowPixels = cv::countNonZero(centerYellow);
 
-    float COLOR_THRESHOLD = 240;
+    float COLOR_THRESHOLD = 220;
     float INPUT_LOWER_BOUND = 0;
     float INPUT_UPPER_BOUND = 1200;
 
