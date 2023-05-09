@@ -2,12 +2,12 @@
 #include "opendlv-standard-message-set.hpp"
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include "utils/stats.hpp"
 #include <iostream>
 #include <iomanip> // include the header file for setprecision
-#include <fstream> // include the header file for file stream
 #include <string>
 #include <cmath>
+#include "utils/stats.hpp"
+#include "utils/fileio.hpp"
 
 float correctFrames = 0;
 float totalFrames = 0;
@@ -40,19 +40,6 @@ int main(int argc, char **argv)
         bool isBlueLeft = false;
 
         std::unique_ptr<cluon::SharedMemory> sharedMemory{new cluon::SharedMemory{NAME}};
-
-        // Create an output file stream object named csvFile
-        std::ofstream csvFile;
-
-        // Open the file "data.csv" with the "append" flag
-        csvFile.open("/host/data.csv", std::ios_base::app);
-
-        // Check if the file was opened successfully
-        if (!csvFile.is_open()) {
-            // Output an error message to the standard error stream and return an error code of 1
-            std::cerr << "Error opening file " << "data.csv" << std::endl;
-            return 1;
-        }
 
         // Initialize a float variable named steeringWheelAngle to the value of pi
         float steeringWheelAngle = 3.14159265359f;
@@ -204,27 +191,35 @@ int main(int argc, char **argv)
                         correctFrames++;
                     }
 
-                    // write value of steeringWheelAngle to csvFile.
-                    csvFile << "GroundSteeringRequest -> " << groundSteering << "; " << "sampleTimeStamp -> " << final.str() << "; " << "steeringWheelAngle -> " << steeringWheelAngle << std::endl;
+                    // Declare a string variable called "filename" and initialize it to "data.csv"
+                    std::string filename = "/host/data.csv";
+
+                    // Declare a string stream called "data"
+                    std::stringstream data;
+
+                    // Append formatted data to the string stream "data"
+                    data << "GroundSteeringRequest -> " << groundSteering << "; "
+                         << "sampleTimeStamp -> " << final.str() << "; "
+                         << "steeringWheelAngle -> " << steeringWheelAngle;
+
+                    // Write the contents of the string stream "data" to a file with the name specified by "filename"
+                    write_file(filename, data.str());
 
                     // print A20 requirement
                     std::cout << "group_06;" << final.str() << ";" << steeringWheelAngle << std::endl;
-
 
                     // Increment the total frames counter
                     totalFrames++;
                 }
 
-                // Output the frame statistics (i.e., the number of correct frames and the total number of frames processed)
-                // as well as the percentage of correct frames
+                /* Output the frame statistics
+                 * (i.e., the number of correct frames and the total number of frames processed)
+                 * as well as the percentage of correct frames
+                 */
                 //std::cout << "Frame Stats:" << std::setprecision(0) << correctFrames << "/" << std::setprecision(0) << totalFrames << "\t" << ((correctFrames/totalFrames)*100) << " %" << std::endl;
 
             }
         }
-
-        // flush and close csvFile
-        csvFile.flush();
-        csvFile.close();
 
         retCode = 0;
     }
