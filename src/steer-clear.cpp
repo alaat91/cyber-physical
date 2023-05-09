@@ -14,6 +14,9 @@ float totalFrames = 0;
 
 int main(int argc, char **argv)
 {
+
+    // -------------------- LOCAL VARIABLE DECLARATION --------------------
+
     int retCode{1};
 
     auto commandlineArguments = cluon::getCommandlineArguments(argc, argv);
@@ -191,19 +194,29 @@ int main(int argc, char **argv)
                         correctFrames++;
                     }
 
+                    // -------------------- FILE HANDLING START --------------------
+
                     // Declare a string variable called "filename" and initialize it to "data.csv"
                     std::string filename = "/host/data.csv";
+
+                    // Write the header row to the CSV file
+                    write_header_row(filename);
+
+                    // Read the previous commit value from the CSV file and update the previous and current commit values
+                    int previous_commit = read_file(filename);
+                    int new_previous_commit = previous_commit + 1;
 
                     // Declare a string stream called "data"
                     std::stringstream file_data;
 
                     // Append formatted data to the string stream "data"
-                    file_data << "GroundSteeringRequest = " << groundSteering << "; "
-                         << "sampleTimeStamp = " << final.str() << "; "
-                         << "steeringWheelAngle = " << steeringWheelAngle << std::endl;
+                    file_data << "GroundSteeringRequest = " << groundSteering << ", "
+                              << "sampleTimeStamp = " << final.str() << ", ";
 
-                    // Write the contents of the string stream "data" to a file with the name specified by "filename"
-                    write_file(filename, file_data.str());
+                    // Write the previous and current commit values to the CSV file
+                    write_file(filename, std::to_string(previous_commit), std::to_string(new_previous_commit), file_data.str());
+
+                    // -------------------- FILE HANDLING END --------------------
 
                     // print A20 requirement
                     std::cout << "group_06;" << final.str() << ";" << steeringWheelAngle << std::endl;
