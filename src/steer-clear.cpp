@@ -85,41 +85,44 @@ int main(int argc, char **argv)
 
                 cv::Rect cent(160, 250, 330, 150);
                 cv::Rect cent2(180, 250, 370, 150);
-                cv::Mat imgCenterBlue = imgColorSpaceBlue(cent);
-                cv::Mat imgCenterYellow = imgColorSpaceYellow(cent2);
+                cv::Mat imgCenterLeft = imgColorSpaceBlue(cent);
+                cv::Mat imgCenterRight = imgColorSpaceYellow(cent2);
 
                 if (!isSteeringDetermined)
                 {
                     // check for blue on the left half of image
                     cv::Rect leftSide(0, 0, 320, 480);
-                    cv::Mat imageLEFT = imgHSV(leftSide);
-                    cv::inRange(imageLEFT, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBlue);
-                  
-                    // check for yellow on the right half of image
-                    cv::Rect rightSide(320, 0, 320, 480);
-                    cv::Mat imageRIGHT = imgHSV(rightSide);
-                    cv::inRange(imageRIGHT, cv::Scalar(13, 58, 133), cv::Scalar(26, 255, 255), imgColorSpaceYellow);
+                    cv::Mat imageLEFT = imgColorSpaceBlue(leftSide);
 
-                    int bluePixels = cv::countNonZero(imgColorSpaceBlue);
-                    int yellowPixels = cv::countNonZero(imgColorSpaceYellow);
+                    // check for yellow on the right half of image
+                    cv::Rect rightSide(320, 0, 320, 410);
+                    cv::Mat imageRIGHT = imgColorSpaceYellow(rightSide);
+                    cv::imshow("L", imageLEFT);
+                    cv::imshow("R", imageRIGHT);
+                    int bluePixels = cv::countNonZero(imageLEFT);
+                    int yellowPixels = cv::countNonZero(imageRIGHT);
+                    std::cout << bluePixels << std::endl;
+                    std::cout << yellowPixels << std::endl;
                     if (bluePixels > 30 && yellowPixels > 30)
                     {
                         isBlueLeft = true;
                         isSteeringDetermined = true;
                         std::cout << "Blue is on the left" << std::endl;
+                        imgCenterLeft = imgColorSpaceBlue(cent);
+                        imgCenterRight = imgColorSpaceYellow(cent2);
                     }
                     else{
-                        imageLEFT = imgHSV(leftSide);
-                        cv::inRange(imageLEFT, cv::Scalar(13, 58, 133), cv::Scalar(26, 255, 255), imgColorSpaceYellow);
-                        imageRIGHT = imgHSV(rightSide);
-                        cv::inRange(imageRIGHT, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBlue);
-                        bluePixels = cv::countNonZero(imgColorSpaceBlue);
-                        yellowPixels = cv::countNonZero(imgColorSpaceYellow);
+                        imageLEFT = imgColorSpaceYellow(leftSide);
+                        imageRIGHT = imgColorSpaceBlue(rightSide);
+                        bluePixels = cv::countNonZero(imageRIGHT);
+                        yellowPixels = cv::countNonZero(imageLEFT);
                         if (bluePixels > 30 && yellowPixels > 30)
                         {
                             isBlueLeft = false;
                             isSteeringDetermined = true;
                             std::cout << "Blue is on the right" << std::endl;
+                            imgCenterLeft = imgColorSpaceYellow(cent);
+                            imgCenterRight = imgColorSpaceBlue(cent2);
                         }
                     }
                 }
@@ -127,15 +130,15 @@ int main(int argc, char **argv)
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
-                    // calculateStats(imgCenterBlue, imgCenterYellow, gsr, isBlueLeft);
+                    // calculateStats(imgCenterLeft, imgCenterRight, gsr, isBlueLeft);
                     float g1 = gsr.groundSteering();
-                    float g2 = getGSR(imgCenterBlue, imgCenterYellow, isBlueLeft);
+                    float g2 = getGSR(imgCenterLeft, imgCenterRight, isBlueLeft);
                     determineError(g1, g2);
-                    writePixels(cv::countNonZero(imgCenterBlue), cv::countNonZero(imgCenterYellow), gsr.groundSteering(), g2);
+                    //writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
                 }
 
-                cv::imshow("Color-Space Yellow", imgCenterYellow);
-                cv::imshow("Color-Space Blue", imgCenterBlue);
+                cv::imshow("Color-Space Yellow", imgCenterRight);
+                cv::imshow("Color-Space Blue", imgCenterLeft);
             }
         }
         retCode = 0;
