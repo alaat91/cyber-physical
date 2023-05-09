@@ -156,7 +156,7 @@ void determineError(float g1, float g2)
     {
         correctFrames++;
     }
-    else if (g1 == 0 && fabs(g1 - g2) < 0.05)
+    else if (g1 == 0 && fabs(g1 - g2) <= 0.05)
     {
         correctFrames++;
     }
