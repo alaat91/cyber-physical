@@ -131,7 +131,7 @@ int main(int argc, char **argv)
                     float g1 = gsr.groundSteering();
                     float g2 = getGSR(imgCenterBlue, imgCenterYellow, isBlueLeft);
                     determineError(g1, g2);
-                    // writePixels(cv::countNonZero(imgCenterBlue), cv::countNonZero(imgCenterYellow), gsr.groundSteering(), g2);
+                    writePixels(cv::countNonZero(imgCenterBlue), cv::countNonZero(imgCenterYellow), gsr.groundSteering(), g2);
                 }
 
                 cv::imshow("Color-Space Yellow", imgCenterYellow);
@@ -173,6 +173,10 @@ float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, bool isBlueLeft)
     else if (!isBlueLeft && yellowPixels > COLOR_THRESHOLD)
     {
         gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+    } else if(isBlueLeft){
+        gsr -= 0.049;
+    } else {
+        gsr += 0.049;
     }
 
     return gsr;
