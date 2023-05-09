@@ -195,15 +195,15 @@ int main(int argc, char **argv)
                     std::string filename = "/host/data.csv";
 
                     // Declare a string stream called "data"
-                    std::stringstream data;
+                    std::stringstream file_data;
 
                     // Append formatted data to the string stream "data"
-                    data << "GroundSteeringRequest -> " << groundSteering << "; "
-                         << "sampleTimeStamp -> " << final.str() << "; "
-                         << "steeringWheelAngle -> " << steeringWheelAngle;
+                    file_data << "GroundSteeringRequest = " << groundSteering << "; "
+                         << "sampleTimeStamp = " << final.str() << "; "
+                         << "steeringWheelAngle = " << steeringWheelAngle << std::endl;
 
                     // Write the contents of the string stream "data" to a file with the name specified by "filename"
-                    write_file(filename, data.str());
+                    write_file(filename, file_data.str());
 
                     // print A20 requirement
                     std::cout << "group_06;" << final.str() << ";" << steeringWheelAngle << std::endl;

@@ -1,6 +1,5 @@
 #include <fstream>
 #include <sstream>
-#include <string>
 #include "fileio.hpp"
 #include <iostream>
 
@@ -11,9 +10,9 @@ std::string read_file(const std::string& filename) {
     return buffer.str();
 }
 
-void write_file(const std::string& filename, const std::string& data) {
+void write_file(const std::string& filename, const std::string& file_data) {
     // Create an output file stream object named file
-    std::ofstream file(filename);
+    std::ofstream file(filename, std::ios_base::app);
 
     // Check if the file was opened successfully
     if (!file.is_open()) {
@@ -23,7 +22,7 @@ void write_file(const std::string& filename, const std::string& data) {
     }
 
     // Write data to the file
-    file << data;
+    file << file_data;
 
     // Flush and close the file stream
     file.flush();
