@@ -199,8 +199,10 @@ int main(int argc, char **argv)
                     // Declare a string variable called "filename" and initialize it to "data.csv"
                     std::string filename = "/host/data.csv";
 
-                    // Write the header row to the CSV file
+                    // Check if file exists and write header row if not
+                    if (!std::ifstream(filename)) {
                     write_header_row(filename);
+                    }
 
                     // Read the previous commit value from the CSV file and update the previous and current commit values
                     int previous_commit = read_file(filename);
