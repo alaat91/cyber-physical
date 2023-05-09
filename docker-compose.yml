@@ -1,0 +1,42 @@
+version: '3.3'
+
+services:
+  opendlv-vehicle-view:
+    image: chrberger/opendlv-vehicle-view:v0.0.64
+    container_name: opendlv-vehicle-view
+    volumes:
+      - $PWD/recordings:/opt/vehicle-view/recordings
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8081:8081"
+    network_mode: host
+    stdin_open: true
+    tty: true
+
+  h264decoder:
+    build:
+      context: https://github.com/chalmers-revere/opendlv-video-h264-decoder.git#v0.0.5
+      dockerfile: Dockerfile
+    container_name: decoder
+    volumes:
+      - /tmp:/tmp
+    environment:
+      - DISPLAY=$DISPLAY
+    network_mode: host
+    ipc: host
+    command: --cid=253 --name=img
+
+
+  termuric-cod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - $PWD/artifacts:/host
+      - /tmp:/tmp
+    environment:
+      - DISPLAY=$DISPLAY
+    network_mode: host
+    ipc: host
+    command: --name=img --width=640 --height=480 --cid=253
+

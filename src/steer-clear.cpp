@@ -9,8 +9,19 @@
 #include <string>
 #include <cmath>
 
+#include <atomic>
+#include <signal.h>
+
 float correctFrames = 0;
 float totalFrames = 0;
+
+std::atomic<bool> should_exit{false};
+
+// Signal handler function
+void signalHandler(int signum)
+{
+    should_exit = true;
+}
 
 int main(int argc, char **argv)
 {
@@ -39,7 +50,16 @@ int main(int argc, char **argv)
         bool isSteeringDetermined = false;
         bool isBlueLeft = false;
 
+        signal(SIGINT, signalHandler);
+
         std::unique_ptr<cluon::SharedMemory> sharedMemory{new cluon::SharedMemory{NAME}};
+
+        while (!sharedMemory->valid() && !should_exit)
+        {
+            sharedMemory = std::make_unique<cluon::SharedMemory>(NAME);
+            std::cout << "Waiting for shared memory region to be created..." << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
 
         // Create an output file stream object named csvFile
         std::ofstream csvFile;
@@ -48,9 +68,11 @@ int main(int argc, char **argv)
         csvFile.open("data.csv", std::ios_base::app);
 
         // Check if the file was opened successfully
-        if (!csvFile.is_open()) {
+        if (!csvFile.is_open())
+        {
             // Output an error message to the standard error stream and return an error code of 1
-            std::cerr << "Error opening file " << "data.csv" << std::endl;
+            std::cerr << "Error opening file "
+                      << "data.csv" << std::endl;
             return 1;
         }
 
@@ -86,15 +108,17 @@ int main(int argc, char **argv)
             {
                 std::lock_guard<std::mutex> lck(voltageMutex); // Lock the "voltageMutex" so that only one thread can access the shared voltage readings at a time.
 
-                leftVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope)); // Extract the left voltage reading from the cluon::data::Envelope and store it in "leftVoltage".
+                leftVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope));  // Extract the left voltage reading from the cluon::data::Envelope and store it in "leftVoltage".
                 rightVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope)); // Extract the right voltage reading from the cluon::data::Envelope and store it in "rightVoltage".
 
-                if (envelope.senderStamp() == 1) { // If the sender ID of the envelope is 1 (left IR sensor):
-                    //std::cout << "Left Sensor Voltage: " << std::fixed << std::setprecision(10) << leftVoltage.voltage() << std::endl; // Print the left voltage reading to the console.
+                if (envelope.senderStamp() == 1)
+                { // If the sender ID of the envelope is 1 (left IR sensor):
+                  // std::cout << "Left Sensor Voltage: " << std::fixed << std::setprecision(10) << leftVoltage.voltage() << std::endl; // Print the left voltage reading to the console.
                 }
 
-                if (envelope.senderStamp() == 3) { // If the sender ID of the envelope is 3 (right IR sensor):
-                    //std::cout << "Right Sensor Voltage: " << std::fixed << std::setprecision(10) << rightVoltage.voltage() << std::endl; // Print the right voltage reading to the console.
+                if (envelope.senderStamp() == 3)
+                { // If the sender ID of the envelope is 3 (right IR sensor):
+                  // std::cout << "Right Sensor Voltage: " << std::fixed << std::setprecision(10) << rightVoltage.voltage() << std::endl; // Print the right voltage reading to the console.
                 }
 
                 /*
@@ -103,11 +127,16 @@ int main(int argc, char **argv)
                  * If rightVoltage is 0.01 or higher, set steeringWheelAngle to 0.04.
                  * Else, set steeringWheelAngle to zero.
                  */
-                if (leftVoltage.voltage() >= 0.089f) {
+                if (leftVoltage.voltage() >= 0.089f)
+                {
                     steeringWheelAngle = -0.03f;
-                } else if (rightVoltage.voltage() >= 0.089f) {
+                }
+                else if (rightVoltage.voltage() >= 0.089f)
+                {
                     steeringWheelAngle = 0.03f;
-                } else {
+                }
+                else
+                {
                     steeringWheelAngle = 0.00f;
                 }
 
@@ -116,7 +145,6 @@ int main(int argc, char **argv)
 
                 // write value of steeringWheelAngle to csvFile.
                 csvFile << steeringWheelAngle;
-
             };
 
             od4.dataTrigger(opendlv::proxy::VoltageReading::ID(), VoltageReading); // Trigger the "VoltageReading" lambda function when a message with the ID of opendlv::proxy::VoltageReading is received.
@@ -159,7 +187,7 @@ int main(int argc, char **argv)
                     cv::Rect roi(0, 0, 320, 480);
                     imageLEFT = imgHSV(roi);
                     cv::inRange(imageLEFT, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBLUE);
-                    //cv::imshow("LEFT", imgColorSpaceBLUE);
+                    // cv::imshow("LEFT", imgColorSpaceBLUE);
                     int bluePixels = cv::countNonZero(imgColorSpaceBLUE);
                     if (bluePixels > 30)
                     {
@@ -186,8 +214,9 @@ int main(int argc, char **argv)
                     float error = ((fabs(groundSteering - steeringWheelAngle)) / fabs(groundSteering)) * 100;
 
                     // If the ground steering is zero, set the error to the absolute difference between the two steering angles
-                    if(groundSteering == 0){
-                        error = fabs(groundSteering-steeringWheelAngle);
+                    if (groundSteering == 0)
+                    {
+                        error = fabs(groundSteering - steeringWheelAngle);
                     }
 
                     // Output the original and ground steering angles, as well as the error
@@ -198,9 +227,12 @@ int main(int argc, char **argv)
                     // If the ground steering is not zero and the error is less than or equal to 30, increment the correct frames counter
                     // Otherwise, if the ground steering is zero and the absolute difference between the two steering angles is less than 0.05, increment the correct frames counter
                     // In all other cases, do not increment the correct frames counter
-                    if (groundSteering != 0 && error <= 30 ){
+                    if (groundSteering != 0 && error <= 30)
+                    {
                         correctFrames++;
-                    } else if(groundSteering==0 && fabs(groundSteering-steeringWheelAngle) < 0.05) {
+                    }
+                    else if (groundSteering == 0 && fabs(groundSteering - steeringWheelAngle) < 0.05)
+                    {
                         correctFrames++;
                     }
 
@@ -210,8 +242,7 @@ int main(int argc, char **argv)
 
                 // Output the frame statistics (i.e., the number of correct frames and the total number of frames processed)
                 // as well as the percentage of correct frames
-                std::cout << "Frame Stats:" << std::setprecision(0) << correctFrames << "/" << std::setprecision(0) << totalFrames << "\t" << ((correctFrames/totalFrames)*100) << " %" << std::endl;
-
+                std::cout << "Frame Stats:" << std::setprecision(0) << correctFrames << "/" << std::setprecision(0) << totalFrames << "\t" << ((correctFrames / totalFrames) * 100) << " %" << std::endl;
             }
         }
 

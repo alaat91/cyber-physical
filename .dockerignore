@@ -4,3 +4,4 @@ setup.sh
 .vscode/
 .idea/
 .cmake-build-debug/
+artifacts/
