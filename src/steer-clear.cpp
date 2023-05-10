@@ -2,12 +2,23 @@
 #include "opendlv-standard-message-set.hpp"
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-
-#include <cstdlib>
-
 #include "utils/stats.hpp"
+#include "data/steering.hpp"
+#include <cstdlib>
+#include <iostream>
+#include <fstream> // include the header file for file stream
+#include <string>
+#include <cmath>
+#include <atomic>
+#include <signal.h>
 
-float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, bool isBlueLeft);
+std::atomic<bool> should_exit{false};
+
+// Signal handler function
+void signalHandler(int signum)
+{
+    should_exit = true;
+}
 
 int main(int argc, char **argv)
 {
@@ -17,26 +28,42 @@ int main(int argc, char **argv)
 
     if ((0 == commandlineArguments.count("name")) ||
         (0 == commandlineArguments.count("width")) ||
-        (0 == commandlineArguments.count("height")))
+        (0 == commandlineArguments.count("height")) ||
+        (0 == commandlineArguments.count("cid")))
     {
 
         std::cerr << argv[0] << " attaches to a shared memory area containing an ARGB image and transform it to HSV color space for inspection." << std::endl;
-        std::cerr << "Usage: " << argv[0] << " --name=<name of shared memory area> --width=<W> --height=<H>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " --name=<name of shared memory area> --width=<W> --height=<H> --cid=<C>" << std::endl;
         std::cerr << " --name: name of the shared memory area to attach" << std::endl;
         std::cerr << " --width: width of the frame" << std::endl;
         std::cerr << " --height: height of the frame" << std::endl;
-        std::cerr << "Example: " << argv[0] << " --name=img.argb --width=640 --height=480" << std::endl;
+        std::cerr << " --cid: given cid" << std::endl;
+        std::cerr << "Example: " << argv[0] << " --name=img.argb --width=640 --height=480 --cid=253" << std::endl;
     }
     else
     {
+        // extract commandline arguments
         const std::string NAME{commandlineArguments["name"]};
         const uint32_t WIDTH{static_cast<uint32_t>(std::stoi(commandlineArguments["width"]))};
         const uint32_t HEIGHT{static_cast<uint32_t>(std::stoi(commandlineArguments["height"]))};
+        const uint16_t CID{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))};
 
-        bool isSteeringDetermined = false;
-        bool isBlueLeft = false;
+        // signal handler for ctrl+c
+        signal(SIGINT, signalHandler);
 
+        // create shared memory pointer
         std::unique_ptr<cluon::SharedMemory> sharedMemory{new cluon::SharedMemory{NAME}};
+
+        // while shared memory is not valid, keep attempting to recreate it
+        while (!sharedMemory->valid() && !should_exit)
+        {
+            sharedMemory = std::make_unique<cluon::SharedMemory>(NAME);
+            std::cout << "Waiting for shared memory region to be created..." << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+
+        // Initialize a float variable named steeringWheelAngle to the value of pi
+        float steeringWheelAngle = 3.14159265359f;
 
         if (sharedMemory && sharedMemory->valid())
         {
@@ -44,7 +71,7 @@ int main(int argc, char **argv)
 
             // Interface to a running OpenDaVINCI session where network messages are exchanged.
             // The instance od4 allows you to send and receive messages.
-            cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))};
+            cluon::OD4Session od4{CID};
 
             opendlv::proxy::GroundSteeringRequest gsr;
             std::mutex gsrMutex;
@@ -57,6 +84,53 @@ int main(int argc, char **argv)
             };
 
             od4.dataTrigger(opendlv::proxy::GroundSteeringRequest::ID(), onGroundSteeringRequest);
+
+            opendlv::proxy::VoltageReading leftVoltage;  // Declare an instance of opendlv::proxy::VoltageReading called "leftVoltage".
+            opendlv::proxy::VoltageReading rightVoltage; // Declare an instance of opendlv::proxy::VoltageReading called "rightVoltage".
+
+            std::mutex voltageMutex; // Declare a mutex object called "voltageMutex" to protect the shared voltage readings.
+
+            auto VoltageReading = [&](cluon::data::Envelope &&envelope) // Declare a lambda function called "VoltageReading" that takes a cluon::data::Envelope by rvalue reference.
+            {
+                std::lock_guard<std::mutex> lck(voltageMutex); // Lock the "voltageMutex" so that only one thread can access the shared voltage readings at a time.
+
+                leftVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope));  // Extract the left voltage reading from the cluon::data::Envelope and store it in "leftVoltage".
+                rightVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope)); // Extract the right voltage reading from the cluon::data::Envelope and store it in "rightVoltage".
+
+                if (envelope.senderStamp() == 1)
+                { // If the sender ID of the envelope is 1 (left IR sensor):
+                  // std::cout << "Left Sensor Voltage: " << std::fixed << std::setprecision(10) << leftVoltage.voltage() << std::endl; // Print the left voltage reading to the console.
+                }
+
+                if (envelope.senderStamp() == 3)
+                { // If the sender ID of the envelope is 3 (right IR sensor):
+                  // std::cout << "Right Sensor Voltage: " << std::fixed << std::setprecision(10) << rightVoltage.voltage() << std::endl; // Print the right voltage reading to the console.
+                }
+
+                /*
+                 * Implement basic calculation of steeringWheelAngle.
+                 * If leftVoltage is 0.01 or higher, set steeringWheelAngle to -0.04.
+                 * If rightVoltage is 0.01 or higher, set steeringWheelAngle to 0.04.
+                 * Else, set steeringWheelAngle to zero.
+                 */
+                if (leftVoltage.voltage() >= 0.089f)
+                {
+                    steeringWheelAngle = -0.03f;
+                }
+                else if (rightVoltage.voltage() >= 0.089f)
+                {
+                    steeringWheelAngle = 0.03f;
+                }
+                else
+                {
+                    steeringWheelAngle = 0.00f;
+                }
+
+                // print value of steeringWheelAngle to console.
+                std::cout << "steeringWheelAngle: " << std::fixed << std::setprecision(6) << steeringWheelAngle << std::endl;
+            };
+
+            od4.dataTrigger(opendlv::proxy::VoltageReading::ID(), VoltageReading); // Trigger the "VoltageReading" lambda function when a message with the ID of opendlv::proxy::VoltageReading is received.
 
             while (od4.isRunning() && cv::waitKey(10))
             {
@@ -75,6 +149,7 @@ int main(int argc, char **argv)
                 }
                 sharedMemory->unlock();
 
+                // define the color spaces used for blue and yellow cones
                 cv::Mat imgHSV;
                 cv::cvtColor(img, imgHSV, cv::COLOR_BGR2HSV);
                 cv::Mat imgColorSpaceBlue;
@@ -82,105 +157,28 @@ int main(int argc, char **argv)
                 cv::Mat imgColorSpaceYellow;
                 cv::inRange(imgHSV, cv::Scalar(13, 58, 133), cv::Scalar(26, 255, 255), imgColorSpaceYellow);
                 cv::rectangle(img, cv::Point(180, 250), cv::Point(500, 400), cv::Scalar(0, 0, 255));
+                
+                // define the center areas of focus for the cv algorithm 
+                cv::Rect centerLeft(160, 250, 330, 150);
+                cv::Rect centerRight(180, 250, 370, 150);
+                cv::Mat imgCenterLeft = imgColorSpaceBlue(centerLeft);
+                cv::Mat imgCenterRight = imgColorSpaceYellow(centerRight);
 
-                cv::Rect cent(160, 250, 330, 150);
-                cv::Rect cent2(180, 250, 370, 150);
-                cv::Mat imgCenterLeft = imgColorSpaceBlue(cent);
-                cv::Mat imgCenterRight = imgColorSpaceYellow(cent2);
-
-                if (!isSteeringDetermined)
-                {
-                    // check for blue on the left half of image
-                    cv::Rect leftSide(0, 0, 320, 480);
-                    cv::Mat imageLEFT = imgColorSpaceBlue(leftSide);
-
-                    // check for yellow on the right half of image
-                    cv::Rect rightSide(320, 0, 320, 410);
-                    cv::Mat imageRIGHT = imgColorSpaceYellow(rightSide);
-                    cv::imshow("L", imageLEFT);
-                    cv::imshow("R", imageRIGHT);
-                    int bluePixels = cv::countNonZero(imageLEFT);
-                    int yellowPixels = cv::countNonZero(imageRIGHT);
-                    std::cout << bluePixels << std::endl;
-                    std::cout << yellowPixels << std::endl;
-                    if (bluePixels > 30 && yellowPixels > 30)
-                    {
-                        isBlueLeft = true;
-                        isSteeringDetermined = true;
-                        std::cout << "Blue is on the left" << std::endl;
-                        imgCenterLeft = imgColorSpaceBlue(cent);
-                        imgCenterRight = imgColorSpaceYellow(cent2);
-                    }
-                    else{
-                        imageLEFT = imgColorSpaceYellow(leftSide);
-                        imageRIGHT = imgColorSpaceBlue(rightSide);
-                        bluePixels = cv::countNonZero(imageRIGHT);
-                        yellowPixels = cv::countNonZero(imageLEFT);
-                        if (bluePixels > 30 && yellowPixels > 30)
-                        {
-                            isBlueLeft = false;
-                            isSteeringDetermined = true;
-                            std::cout << "Blue is on the right" << std::endl;
-                            imgCenterLeft = imgColorSpaceYellow(cent);
-                            imgCenterRight = imgColorSpaceBlue(cent2);
-                        }
-                    }
-                }
+                // determine the side of the colored cones, performed until a color is decided upon
+                bool isConeColorDetermined = determineConeColors(imgColorSpaceBlue, imgColorSpaceYellow, centerLeft, centerRight);
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
                     // calculateStats(imgCenterLeft, imgCenterRight, gsr, isBlueLeft);
                     float g1 = gsr.groundSteering();
-                    float g2 = getGSR(imgCenterLeft, imgCenterRight, isBlueLeft);
+                    float g2 = getCvGSR(imgCenterLeft, imgCenterRight);
                     determineError(g1, g2);
-                    //writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
+                    // writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
                 }
-
-                cv::imshow("Color-Space Yellow", imgCenterRight);
-                cv::imshow("Color-Space Blue", imgCenterLeft);
             }
         }
         retCode = 0;
     }
     return retCode;
-}
-
-float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, bool isBlueLeft)
-{
-    float gsr = 0;
-    int bluePixels = cv::countNonZero(centerBlue);
-    int yellowPixels = cv::countNonZero(centerYellow);
-
-    float COLOR_THRESHOLD = 220;
-    float INPUT_LOWER_BOUND = 0;
-    float INPUT_UPPER_BOUND = 1200;
-
-    float OUTPUT_LOWER_BOUND = 0;
-    float OUTPUT_UPPER_BOUND = 0.21;
-
-    float slope = (OUTPUT_UPPER_BOUND - OUTPUT_LOWER_BOUND) / (INPUT_UPPER_BOUND - INPUT_LOWER_BOUND);
-
-    if (isBlueLeft && bluePixels > COLOR_THRESHOLD)
-    {
-        gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
-    }
-    else if (!isBlueLeft && bluePixels > COLOR_THRESHOLD)
-    {
-        gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
-    }
-    else if (isBlueLeft && yellowPixels > COLOR_THRESHOLD)
-    {
-        gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
-    }
-    else if (!isBlueLeft && yellowPixels > COLOR_THRESHOLD)
-    {
-        gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
-    } else if(isBlueLeft){
-        gsr -= 0.049;
-    } else {
-        gsr += 0.049;
-    }
-
-    return gsr;
 }

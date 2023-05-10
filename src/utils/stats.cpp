@@ -59,17 +59,17 @@ void calculateStats(
         emptyBlue++;
     }
     // Our algorithm turns the car when it should
-    std::cout << "Correct blue  : ";
-    std::cout << countBlue << std::endl;
+    //std::cout << "Correct blue  : ";
+    //std::cout << countBlue << std::endl;
     // Our algorithm turns the car when it shouldn’t
-    std::cout << "onlyBlue      : ";
-    std::cout << onlyblue << std::endl;
+    //std::cout << "onlyBlue      : ";
+    //std::cout << onlyblue << std::endl;
     // Our algorithm doesn’t turn the car when it should
-    std::cout << "only Gsr right: ";
-    std::cout << onlygsrblue << std::endl;
+    //std::cout << "only Gsr right: ";
+    //std::cout << onlygsrblue << std::endl;
     // Our algorithm doesn’t turn the car, and it shouldn’t
-    std::cout << "Neither output: ";
-    std::cout << emptyBlue << std::endl;
+    //std::cout << "Neither output: ";
+    //std::cout << emptyBlue << std::endl;
 
     yellowPixelAmount = cv::countNonZero(imgCenterYellow);
 
@@ -113,14 +113,14 @@ void calculateStats(
         emptyYellow++;
     }
     // Our algorithm turns the car when it should
-    std::cout << "Correct yellow: ";
-    std::cout << countYellow << std::endl;
+    //std::cout << "Correct yellow: ";
+    //std::cout << countYellow << std::endl;
     // Our algorithm turns the car when it shouldn’t
-    std::cout << "onlyYellow    : ";
-    std::cout << onlyyellow << std::endl;
+    //std::cout << "onlyYellow    : ";
+    //std::cout << onlyyellow << std::endl;
     // Our algorithm doesn’t turn the car when it should
-    std::cout << "only Gsr left : ";
-    std::cout << onlygsryellow << std::endl;
+    //std::cout << "only Gsr left : ";
+    //std::cout << onlygsryellow << std::endl;
     // Our algorithm doesn’t turn the car, and it shouldn’t
     std::cout << "Neither output: ";
     std::cout << emptyYellow << std::endl;
