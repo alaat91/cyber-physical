@@ -215,9 +215,9 @@ int main(int argc, char **argv)
                     file_data << groundSteering << ", " << final.str() << ", ";
 
                     // Write the previous and current commit values to the CSV file
-                    write_file(filename, std::to_string(previous_commit), std::to_string(new_previous_commit), file_data.str());
+                    write_file(filename, std::to_string(steeringWheelAngle), std::to_string(previous_commit), file_data.str());
 
-                    // -------------------- FILE HANDLING END --------------------
+                    // -------------------- FILE HANDLING END --------------------¢
 
                     // print A20 requirement
                     std::cout << "group_06;" << final.str() << ";" << steeringWheelAngle << std::endl;
