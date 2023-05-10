@@ -9,13 +9,16 @@
 #include "utils/stats.hpp"
 #include "utils/fileio.hpp"
 
-float correctFrames = 0;
-float totalFrames = 0;
-
 int main(int argc, char **argv)
 {
 
-    // -------------------- LOCAL VARIABLE DECLARATION --------------------
+    // #################### LOCAL VARIABLE DECLARATION ####################
+
+    // Initialize a float variable named steeringWheelAngle to the value of pi
+    float steeringWheelAngle = 3.14159265359f;
+
+    float correctFrames = 0;
+    float totalFrames = 0;
 
     int retCode{1};
 
@@ -43,9 +46,6 @@ int main(int argc, char **argv)
         bool isBlueLeft = false;
 
         std::unique_ptr<cluon::SharedMemory> sharedMemory{new cluon::SharedMemory{NAME}};
-
-        // Initialize a float variable named steeringWheelAngle to the value of pi
-        float steeringWheelAngle = 3.14159265359f;
 
         if (sharedMemory && sharedMemory->valid())
         {
@@ -93,9 +93,9 @@ int main(int argc, char **argv)
                  * If rightVoltage is 0.01 or higher, set steeringWheelAngle to 0.04.
                  * Else, set steeringWheelAngle to zero.
                  */
-                if (leftVoltage.voltage() >= 0.00089f) {
-                    steeringWheelAngle = 12345.99f;
-                } else if (rightVoltage.voltage() >= 0.089f) {
+                if (leftVoltage.voltage() >= 0.089f) {
+                    steeringWheelAngle = -0.30f;
+                } else if (rightVoltage.voltage() >= 0.005f) {
                     steeringWheelAngle = 0.03f;
                 } else {
                     steeringWheelAngle = 0.00f;
@@ -194,33 +194,29 @@ int main(int argc, char **argv)
                         correctFrames++;
                     }
 
-                    // -------------------- FILE HANDLING START --------------------
+                    // #################### FILE HANDLING START ####################
 
                     // Declare a string variable called "filename" and initialize it to "data.csv"
                     std::string filename = "/host/data.csv";
 
                     // Check if file exists and write header row if not
                     if (!std::ifstream(filename)) {
-                    write_header_row(filename);
-                     }
-
-                    // Read the previous commit value from the CSV file and update the previous and current commit values
-                    int previous_commit;
-                    previous_commit = read_file(filename);
+                        write_header_row(filename);
+                    }
 
                     // Declare a string stream called "data"
                     std::stringstream file_data;
 
                     // Append formatted data to the string stream "data"
-                    file_data << groundSteering << ";" << final.str() << ";";
+                    file_data << groundSteering << "," << final.str();
 
                     // Write the previous and current commit values to the CSV file
-                    write_file(filename, std::to_string(steeringWheelAngle), std::to_string(previous_commit), file_data.str());
+                    write_file(filename, std::to_string(steeringWheelAngle), file_data.str());
 
-                    // -------------------- FILE HANDLING END --------------------¢
+                    // #################### FILE HANDLING END ####################
 
                     // print A20 requirement
-                    std::cout << "group_06;" << final.str() << ";" << steeringWheelAngle << std::endl;
+                    std::cout << "group_06," << final.str() << "," << steeringWheelAngle << std::endl;
 
                     // Increment the total frames counter
                     totalFrames++;
