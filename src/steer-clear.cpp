@@ -93,8 +93,8 @@ int main(int argc, char **argv)
                  * If rightVoltage is 0.01 or higher, set steeringWheelAngle to 0.04.
                  * Else, set steeringWheelAngle to zero.
                  */
-                if (leftVoltage.voltage() >= 0.089f) {
-                    steeringWheelAngle = -0.03f;
+                if (leftVoltage.voltage() >= 0.00089f) {
+                    steeringWheelAngle = 12345.99f;
                 } else if (rightVoltage.voltage() >= 0.089f) {
                     steeringWheelAngle = 0.03f;
                 } else {
@@ -205,14 +205,14 @@ int main(int argc, char **argv)
                      }
 
                     // Read the previous commit value from the CSV file and update the previous and current commit values
-                    int previous_commit = read_file(filename);
-                    int new_previous_commit = previous_commit + 1;
+                    int previous_commit;
+                    previous_commit = read_file(filename);
 
                     // Declare a string stream called "data"
                     std::stringstream file_data;
 
                     // Append formatted data to the string stream "data"
-                    file_data << groundSteering << ", " << final.str() << ", ";
+                    file_data << groundSteering << ";" << final.str() << ";";
 
                     // Write the previous and current commit values to the CSV file
                     write_file(filename, std::to_string(steeringWheelAngle), std::to_string(previous_commit), file_data.str());

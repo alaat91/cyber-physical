@@ -15,7 +15,7 @@ void write_header_row(const std::string& filename) {
     }
 
     // Write the header row to the file
-    file << "GroundSteeringRequest, sampleTimeStamp, previous_commit,current_commit" << std::endl;
+    file << "current_commit;" << "previous_commit;" << "GroundSteeringRequest;" << "sampleTimeStamp;" << std::endl;
 
     // Flush and close the file stream
     file.flush();
@@ -33,7 +33,7 @@ int read_file(const std::string& filename) {
         std::getline(file, line);
         std::stringstream linestream(line);
         std::string previous_commit_str;
-        std::getline(linestream, previous_commit_str, ',');
+        std::getline(linestream, previous_commit_str, ';');
         try {
             previous_commit = std::stoi(previous_commit_str);
         } catch (const std::invalid_argument& e) {
@@ -58,7 +58,7 @@ void write_file(const std::string& filename, const std::string& previous_commit,
     }
 
     // Write the previous and current commit values to the file
-    file << previous_commit << "," << current_commit << ",";
+    file << previous_commit << ";" << current_commit << ";";
 
     // Write the additional data to the file
     file << data << std::endl;
