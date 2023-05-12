@@ -4,12 +4,16 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <iostream>
-
+#include <fstream>
 
 void calculateStats(
     cv::Mat imgCenterBlue,
     cv::Mat imgCenterYellow,
     opendlv::proxy::GroundSteeringRequest gsr,
     bool isBlueLeft);
+
+void writePixels(float bluePixels, float YellowPixels, float gsr, float calcGsr);
+
+void determineError(float g1, float g2);
 
 #endif // STATS_HPP
