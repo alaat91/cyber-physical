@@ -27,7 +27,6 @@ void write_header_row(const std::string& filename) {
 }
 
 void write_file(const std::string& filename, const std::string& current_commit, const std::string& data) {
-
     static bool removeFile = true;
     static bool header_exists = false;
     // Check if the file already exists

@@ -4,6 +4,7 @@
 #include <opencv2/imgproc.hpp>
 #include "utils/stats.hpp"
 #include "data/steering.hpp"
+#include "utils/fileio.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -145,8 +146,17 @@ int main(int argc, char **argv)
                     float g1 = gsr.groundSteering();
                     float g2 = getGSR(imgCenterLeft, imgCenterRight, leftVoltage, rightVoltage);
                     determineError(g1, g2);
-                    writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
-                }
+                    //writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
+                     std::string filename = "/host/data.csv";
+
+                     std::stringstream file_data;
+                    // Append formatted data to the string stream "data"
+                    file_data << g1 << "," << final.str();
+
+                    // Write the previous and current commit values to the CSV file
+                    write_file(filename, std::to_string(g2), file_data.str());
+
+                }  
             }
         }
         retCode = 0;
