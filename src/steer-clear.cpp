@@ -2,50 +2,67 @@
 #include "opendlv-standard-message-set.hpp"
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include "utils/stats.hpp"
+#include "data/steering.hpp"
+#include <cstdlib>
 #include <iostream>
-#include <iomanip> // include the header file for setprecision
 #include <string>
 #include <cmath>
-#include "utils/stats.hpp"
-#include "utils/fileio.hpp"
+#include <atomic>
+#include <signal.h>
+
+std::atomic<bool> should_exit{false};
+static bool isConeColorDetermined{false};
+
+// Signal handler function
+void signalHandler(int signum)
+{
+    // explicitly ignore signum
+    (void) signum;
+    should_exit = true;
+}
 
 int main(int argc, char **argv)
 {
-
-    // #################### LOCAL VARIABLE DECLARATION ####################
-
-    // Initialize a float variable named steeringWheelAngle to the value of pi
-    float steeringWheelAngle = 3.14159265359f;
-
-    float correctFrames = 0;
-    float totalFrames = 0;
-
     int retCode{1};
 
     auto commandlineArguments = cluon::getCommandlineArguments(argc, argv);
 
     if ((0 == commandlineArguments.count("name")) ||
         (0 == commandlineArguments.count("width")) ||
-        (0 == commandlineArguments.count("height")))
+        (0 == commandlineArguments.count("height")) ||
+        (0 == commandlineArguments.count("cid")))
     {
 
         std::cerr << argv[0] << " attaches to a shared memory area containing an ARGB image and transform it to HSV color space for inspection." << std::endl;
-        std::cerr << "Usage: " << argv[0] << " --name=<name of shared memory area> --width=<W> --height=<H>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " --name=<name of shared memory area> --width=<W> --height=<H> --cid=<C>" << std::endl;
         std::cerr << " --name: name of the shared memory area to attach" << std::endl;
         std::cerr << " --width: width of the frame" << std::endl;
         std::cerr << " --height: height of the frame" << std::endl;
-        std::cerr << "Example: " << argv[0] << " --name=img.argb --width=640 --height=480" << std::endl;
+        std::cerr << " --cid: given cid" << std::endl;
+        std::cerr << "Example: " << argv[0] << " --name=img.argb --width=640 --height=480 --cid=253" << std::endl;
     }
     else
     {
+        // extract commandline arguments
         const std::string NAME{commandlineArguments["name"]};
         const uint32_t WIDTH{static_cast<uint32_t>(std::stoi(commandlineArguments["width"]))};
         const uint32_t HEIGHT{static_cast<uint32_t>(std::stoi(commandlineArguments["height"]))};
+        const uint16_t CID{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))};
 
-        bool isSteeringDetermined = false;
-        bool isBlueLeft = false;
+        // signal handler for ctrl+c
+        signal(SIGINT, signalHandler);
 
+        // create shared memory pointer
         std::unique_ptr<cluon::SharedMemory> sharedMemory{new cluon::SharedMemory{NAME}};
+
+        // while shared memory is not valid, keep attempting to recreate it
+        while (!sharedMemory->valid() && !should_exit)
+        {
+            sharedMemory = std::make_unique<cluon::SharedMemory>(NAME);
+            std::cout << "Waiting for shared memory region to be created..." << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
 
         if (sharedMemory && sharedMemory->valid())
         {
@@ -53,7 +70,7 @@ int main(int argc, char **argv)
 
             // Interface to a running OpenDaVINCI session where network messages are exchanged.
             // The instance od4 allows you to send and receive messages.
-            cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))};
+            cluon::OD4Session od4{CID};
 
             opendlv::proxy::GroundSteeringRequest gsr;
             std::mutex gsrMutex;
@@ -76,33 +93,8 @@ int main(int argc, char **argv)
             {
                 std::lock_guard<std::mutex> lck(voltageMutex); // Lock the "voltageMutex" so that only one thread can access the shared voltage readings at a time.
 
-                leftVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope)); // Extract the left voltage reading from the cluon::data::Envelope and store it in "leftVoltage".
+                leftVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope));  // Extract the left voltage reading from the cluon::data::Envelope and store it in "leftVoltage".
                 rightVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope)); // Extract the right voltage reading from the cluon::data::Envelope and store it in "rightVoltage".
-
-                if (envelope.senderStamp() == 1) { // If the sender ID of the envelope is 1 (left IR sensor):
-                    //std::cout << "Left Sensor Voltage: " << std::fixed << std::setprecision(10) << leftVoltage.voltage() << std::endl; // Print the left voltage reading to the console.
-                }
-
-                if (envelope.senderStamp() == 3) { // If the sender ID of the envelope is 3 (right IR sensor):
-                    //std::cout << "Right Sensor Voltage: " << std::fixed << std::setprecision(10) << rightVoltage.voltage() << std::endl; // Print the right voltage reading to the console.
-                }
-
-                /*
-                 * Implement basic calculation of steeringWheelAngle.
-                 * If leftVoltage is 0.01 or higher, set steeringWheelAngle to -0.04.
-                 * If rightVoltage is 0.01 or higher, set steeringWheelAngle to 0.04.
-                 * Else, set steeringWheelAngle to zero.
-                 */
-                if (leftVoltage.voltage() >= 0.089f) {
-                    steeringWheelAngle = -0.30f;
-                } else if (rightVoltage.voltage() >= 0.005f) {
-                    steeringWheelAngle = 0.03f;
-                } else {
-                    steeringWheelAngle = 0.00f;
-                }
-
-                // print value of steeringWheelAngle to console.
-                //std::cout << "steeringWheelAngle: " << std::fixed << std::setprecision(6) << steeringWheelAngle << std::endl;
             };
 
             od4.dataTrigger(opendlv::proxy::VoltageReading::ID(), VoltageReading); // Trigger the "VoltageReading" lambda function when a message with the ID of opendlv::proxy::VoltageReading is received.
@@ -128,109 +120,35 @@ int main(int argc, char **argv)
                 final << sampleTimeStamp;
                 //std::cout << "group_06;" << final.str() << ";" << steeringWheelAngle << std::endl;
 
+                // define the color spaces used for blue and yellow cones
                 cv::Mat imgHSV;
-                cv::Mat imageLEFT;
                 cv::cvtColor(img, imgHSV, cv::COLOR_BGR2HSV);
-                cv::Mat imgColorSpaceBLUE;
-                cv::inRange(imgHSV, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBLUE);
-                cv::Mat imgColorSpaceYELLOW;
-                cv::inRange(imgHSV, cv::Scalar(13, 58, 133), cv::Scalar(26, 255, 255), imgColorSpaceYELLOW);
+                cv::Mat imgColorSpaceBlue;
+                cv::inRange(imgHSV, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBlue);
+                cv::Mat imgColorSpaceYellow;
+                cv::inRange(imgHSV, cv::Scalar(13, 58, 133), cv::Scalar(26, 255, 255), imgColorSpaceYellow);
                 cv::rectangle(img, cv::Point(180, 250), cv::Point(500, 400), cv::Scalar(0, 0, 255));
+                
+                // define the center areas of focus for the cv algorithm 
+                cv::Rect centerLeft(160, 250, 330, 150);
+                cv::Rect centerRight(180, 250, 370, 150);
+                cv::Mat imgCenterLeft = imgColorSpaceBlue(centerLeft);
+                cv::Mat imgCenterRight = imgColorSpaceYellow(centerRight);
 
-                cv::Rect cent(180, 250, 350, 150);
-                cv::Mat imgCenterBlue = imgColorSpaceBLUE(cent);
-                cv::Mat imgCenterYellow = imgColorSpaceYELLOW(cent);
-                //cv::imshow("Image", img);
-                cv::imshow("Center-Frame Color-Space Blue", imgCenterBlue);
-                cv::imshow("Center-Frame Color-Space Yellow", imgCenterYellow);
-
-                if (!isSteeringDetermined)
-                {
-                    cv::Rect roi(0, 0, 320, 480);
-                    imageLEFT = imgHSV(roi);
-                    cv::inRange(imageLEFT, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBLUE);
-                    //cv::imshow("LEFT", imgColorSpaceBLUE);
-                    int bluePixels = cv::countNonZero(imgColorSpaceBLUE);
-                    if (bluePixels > 30)
-                    {
-                        isBlueLeft = true;
-                        std::cout << "BLUE detected!" << std::endl;
-                    }
-                    isSteeringDetermined = true;
-                }
+                // determine the side of the colored cones, performed until a color is decided upon
+                isConeColorDetermined = !isConeColorDetermined ? determineConeColors(imgColorSpaceBlue, imgColorSpaceYellow, centerLeft, centerRight) : isConeColorDetermined;
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
-                    // Lock the mutex to prevent other threads from accessing shared resources
                     std::lock_guard<std::mutex> lck(gsrMutex);
-
-                    // Calculate some statistics based on the image data
-                    calculateStats(imgCenterBlue, imgCenterYellow, gsr, isBlueLeft);
-
-                    // Output the ground steering request and the current steering wheel angle
-                    //std::cout << "GroundSteeringRequest: " << gsr.groundSteering() << std::endl;
-                    //std::cout << "steeringWheelAngle: " << std::fixed << std::setprecision(6) << steeringWheelAngle << std::endl;
-
-                    // Calculate the error between the ground steering and the actual steering
-                    float groundSteering = gsr.groundSteering();
-                    float error = ((fabs(groundSteering - steeringWheelAngle)) / fabs(groundSteering)) * 100;
-
-                    // If the ground steering is zero, set the error to the absolute difference between the two steering angles
-                    if(groundSteering == 0){
-                        error = fabs(groundSteering-steeringWheelAngle);
-                    }
-
-                    // Output the original and ground steering angles, as well as the error
-                    //std::cout << "Original Steering: " << groundSteering << std::endl;
-                    //std::cout << "Ground Steering: " << steeringWheelAngle << std::endl;
-                    //std::cout << "Error: " << error << std::endl;
-
-                    // If the ground steering is not zero and the error is less than or equal to 30, increment the correct frames counter
-                    // Otherwise, if the ground steering is zero and the absolute difference between the two steering angles is less than 0.05, increment the correct frames counter
-                    // In all other cases, do not increment the correct frames counter
-                    if (groundSteering != 0 && error <= 30 ){
-                        correctFrames++;
-                    } else if(groundSteering==0 && fabs(groundSteering-steeringWheelAngle) < 0.05) {
-                        correctFrames++;
-                    }
-
-                    // #################### FILE HANDLING START ####################
-
-                    // Declare a string variable called "filename" and initialize it to "data.csv"
-                    std::string filename = "/host/data.csv";
-
-                    // Check if file exists and write header row if not
-                    if (!std::ifstream(filename)) {
-                        write_header_row(filename);
-                    }
-
-                    // Declare a string stream called "data"
-                    std::stringstream file_data;
-
-                    // Append formatted data to the string stream "data"
-                    file_data << groundSteering << "," << final.str();
-
-                    // Write the previous and current commit values to the CSV file
-                    write_file(filename, std::to_string(steeringWheelAngle), file_data.str());
-
-                    // #################### FILE HANDLING END ####################
-
-                    // print A20 requirement
-                    std::cout << "group_06," << final.str() << "," << steeringWheelAngle << std::endl;
-
-                    // Increment the total frames counter
-                    totalFrames++;
+                    // calculateStats(imgCenterLeft, imgCenterRight, gsr, isBlueLeft);
+                    float g1 = gsr.groundSteering();
+                    float g2 = getGSR(imgCenterLeft, imgCenterRight, leftVoltage, rightVoltage);
+                    determineError(g1, g2);
+                    writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
                 }
-
-                /* Output the frame statistics
-                 * (i.e., the number of correct frames and the total number of frames processed)
-                 * as well as the percentage of correct frames
-                 */
-                //std::cout << "Frame Stats:" << std::setprecision(0) << correctFrames << "/" << std::setprecision(0) << totalFrames << "\t" << ((correctFrames/totalFrames)*100) << " %" << std::endl;
-
             }
         }
-
         retCode = 0;
     }
     return retCode;

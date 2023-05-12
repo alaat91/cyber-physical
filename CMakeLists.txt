@@ -79,11 +79,14 @@ set(LIBRARIES ${LIBRARIES} ${OpenCV_LIBS})
 ################################################################################
 # Add additional source files
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/utils)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/data)
 
 set(SOURCE_FILES ${SOURCE_FILES} src/utils/stats.cpp)
 set(HEADER_FILES ${HEADER_FILES} src/utils/stats.hpp)
 set(SOURCE_FILES ${SOURCE_FILES} src/utils/fileio.cpp)
 set(HEADER_FILES ${HEADER_FILES} src/utils/fileio.hpp)
+set(SOURCE_FILES ${SOURCE_FILES} src/data/steering.cpp)
+set(HEADER_FILES ${HEADER_FILES} src/data/steering.hpp)
 
 ################################################################################
 # Create executable.
