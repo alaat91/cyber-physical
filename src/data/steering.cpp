@@ -15,7 +15,6 @@ bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow,
         cv::Rect rightSide(320, 0, 320, 410);
         cv::Mat imageRIGHT = imgColorSpaceYellow(rightSide);
 
-
         int bluePixels = cv::countNonZero(imageLEFT);
         int yellowPixels = cv::countNonZero(imageRIGHT);
         std::cout << bluePixels << std::endl;
@@ -41,6 +40,12 @@ bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow,
         }
     }
     return false;
+}
+
+float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, opendlv::proxy::VoltageReading leftVoltage, opendlv::proxy::VoltageReading rightVoltage)
+{
+    float cv = getCvGSR(centerBlue, centerYellow);
+    return cv != -1 ? cv : getIrGSR(leftVoltage, rightVoltage);
 }
 
 float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
@@ -74,14 +79,30 @@ float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
     {
         gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
     }
-    else if (isBlueLeft)
-    {
-        gsr -= 0.049;
-    }
     else
     {
-        gsr += 0.049;
+        gsr = -1;
     }
 
     return gsr;
 }
+
+/*
+ * Implement basic calculation of steeringWheelAngle.
+ * If leftVoltage is 0.01 or higher, set steeringWheelAngle to -0.04.
+ * If rightVoltage is 0.01 or higher, set steeringWheelAngle to 0.04.
+ * Else, set steeringWheelAngle to zero.
+ */
+float getIrGSR(opendlv::proxy::VoltageReading leftVoltage, opendlv::proxy::VoltageReading rightVoltage)
+{
+    if (leftVoltage.voltage() >= 0.089f)
+    {
+        return 0.03f;
+    }
+    else if (rightVoltage.voltage() >= 0.089f)
+    {
+        return 0.03f;
+    } else {
+        return 0;
+    }
+};

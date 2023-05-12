@@ -133,7 +133,7 @@ void writePixels(float bluePixels, float YellowPixels, float gsr, float calcGsr)
 {
     std::ofstream myfile;
     myfile.open("/host/res.csv", std::ios_base::app);
-    myfile << bluePixels << "," << YellowPixels << "," << gsr << "," << calcGsr << ";\n";
+    myfile << bluePixels << "," << YellowPixels << "," << gsr << "," << calcGsr << "\n";
     myfile.close();
 }
 

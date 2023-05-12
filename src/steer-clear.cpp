@@ -13,10 +13,13 @@
 #include <signal.h>
 
 std::atomic<bool> should_exit{false};
+static bool isConeColorDetermined{false};
 
 // Signal handler function
 void signalHandler(int signum)
 {
+    // explicitly ignore signum
+    (void) signum;
     should_exit = true;
 }
 
@@ -62,9 +65,6 @@ int main(int argc, char **argv)
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 
-        // Initialize a float variable named steeringWheelAngle to the value of pi
-        float steeringWheelAngle = 3.14159265359f;
-
         if (sharedMemory && sharedMemory->valid())
         {
             std::clog << argv[0] << ": Attached to shared memory '" << sharedMemory->name() << " (" << sharedMemory->size() << " bytes)." << std::endl;
@@ -96,38 +96,6 @@ int main(int argc, char **argv)
 
                 leftVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope));  // Extract the left voltage reading from the cluon::data::Envelope and store it in "leftVoltage".
                 rightVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope)); // Extract the right voltage reading from the cluon::data::Envelope and store it in "rightVoltage".
-
-                if (envelope.senderStamp() == 1)
-                { // If the sender ID of the envelope is 1 (left IR sensor):
-                  // std::cout << "Left Sensor Voltage: " << std::fixed << std::setprecision(10) << leftVoltage.voltage() << std::endl; // Print the left voltage reading to the console.
-                }
-
-                if (envelope.senderStamp() == 3)
-                { // If the sender ID of the envelope is 3 (right IR sensor):
-                  // std::cout << "Right Sensor Voltage: " << std::fixed << std::setprecision(10) << rightVoltage.voltage() << std::endl; // Print the right voltage reading to the console.
-                }
-
-                /*
-                 * Implement basic calculation of steeringWheelAngle.
-                 * If leftVoltage is 0.01 or higher, set steeringWheelAngle to -0.04.
-                 * If rightVoltage is 0.01 or higher, set steeringWheelAngle to 0.04.
-                 * Else, set steeringWheelAngle to zero.
-                 */
-                if (leftVoltage.voltage() >= 0.089f)
-                {
-                    steeringWheelAngle = -0.03f;
-                }
-                else if (rightVoltage.voltage() >= 0.089f)
-                {
-                    steeringWheelAngle = 0.03f;
-                }
-                else
-                {
-                    steeringWheelAngle = 0.00f;
-                }
-
-                // print value of steeringWheelAngle to console.
-                std::cout << "steeringWheelAngle: " << std::fixed << std::setprecision(6) << steeringWheelAngle << std::endl;
             };
 
             od4.dataTrigger(opendlv::proxy::VoltageReading::ID(), VoltageReading); // Trigger the "VoltageReading" lambda function when a message with the ID of opendlv::proxy::VoltageReading is received.
@@ -165,16 +133,16 @@ int main(int argc, char **argv)
                 cv::Mat imgCenterRight = imgColorSpaceYellow(centerRight);
 
                 // determine the side of the colored cones, performed until a color is decided upon
-                bool isConeColorDetermined = determineConeColors(imgColorSpaceBlue, imgColorSpaceYellow, centerLeft, centerRight);
+                isConeColorDetermined = !isConeColorDetermined ? determineConeColors(imgColorSpaceBlue, imgColorSpaceYellow, centerLeft, centerRight) : isConeColorDetermined;
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
                     // calculateStats(imgCenterLeft, imgCenterRight, gsr, isBlueLeft);
                     float g1 = gsr.groundSteering();
-                    float g2 = getCvGSR(imgCenterLeft, imgCenterRight);
+                    float g2 = getGSR(imgCenterLeft, imgCenterRight, leftVoltage, rightVoltage);
                     determineError(g1, g2);
-                    // writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
+                    writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
                 }
             }
         }
