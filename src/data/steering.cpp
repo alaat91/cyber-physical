@@ -97,12 +97,8 @@ float getIrGSR(opendlv::proxy::VoltageReading leftVoltage, opendlv::proxy::Volta
 {
     if (leftVoltage.voltage() >= 0.089f)
     {
-        return 0.03f;
-    }
-    else if (rightVoltage.voltage() >= 0.089f)
-    {
-        return 0.03f;
+        return -0.049f;
     } else {
-        return 0;
+        return 0.049f;
     }
 };
