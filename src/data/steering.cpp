@@ -42,10 +42,10 @@ bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow,
     return false;
 }
 
-float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, opendlv::proxy::VoltageReading leftVoltage, opendlv::proxy::VoltageReading rightVoltage)
+float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, float left_voltage_data, float right_voltage_data)
 {
     float cv = getCvGSR(centerBlue, centerYellow);
-    return cv != -1 ? cv : getIrGSR(leftVoltage, rightVoltage);
+    return cv != -1 ? cv : getIrGSR(left_voltage_data, right_voltage_data);
 }
 
 float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
@@ -87,18 +87,14 @@ float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
     return gsr;
 }
 
-/*
- * Implement basic calculation of steeringWheelAngle.
- * If leftVoltage is 0.01 or higher, set steeringWheelAngle to -0.04.
- * If rightVoltage is 0.01 or higher, set steeringWheelAngle to 0.04.
- * Else, set steeringWheelAngle to zero.
- */
-float getIrGSR(opendlv::proxy::VoltageReading leftVoltage, opendlv::proxy::VoltageReading rightVoltage)
-{
-    if (leftVoltage.voltage() >= 0.089f)
-    {
-        return -0.049f;
+// Calculate steeringWheelAngle bases on infrared sensor data
+float getIrGSR(float left_voltage_data, float right_voltage_data) {
+
+    if (left_voltage_data >= 0.09f) { // Check if leftVoltage is 0.09 or higher
+        return -0.03f; // Set steeringWheelAngle to -0.03 (turn right)
+    } else if (right_voltage_data >= 0.09f) { // Check if rightVoltage is 0.09 or higher
+        return 0.03f; // Set steeringWheelAngle to 0.03 (turn left)
     } else {
-        return 0.049f;
+        return 0.00f; // Set steeringWheelAngle to zero (no turn).
     }
-};
+}
