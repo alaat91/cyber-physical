@@ -4,9 +4,9 @@
 #include <opencv2/imgproc.hpp>
 #include "utils/stats.hpp"
 #include "data/steering.hpp"
+#include "utils/fileio.hpp"
 #include <cstdlib>
 #include <iostream>
-#include <fstream> // include the header file for file stream
 #include <string>
 #include <cmath>
 #include <atomic>
@@ -25,6 +25,11 @@ void signalHandler(int signum)
 
 int main(int argc, char **argv)
 {
+
+    // #################### LOCAL VARIABLE DECLARATION ####################
+    float left_voltage_data;
+    float right_voltage_data;
+
     int retCode{1};
 
     auto commandlineArguments = cluon::getCommandlineArguments(argc, argv);
@@ -34,7 +39,6 @@ int main(int argc, char **argv)
         (0 == commandlineArguments.count("height")) ||
         (0 == commandlineArguments.count("cid")))
     {
-
         std::cerr << argv[0] << " attaches to a shared memory area containing an ARGB image and transform it to HSV color space for inspection." << std::endl;
         std::cerr << "Usage: " << argv[0] << " --name=<name of shared memory area> --width=<W> --height=<H> --cid=<C>" << std::endl;
         std::cerr << " --name: name of the shared memory area to attach" << std::endl;
@@ -96,6 +100,16 @@ int main(int argc, char **argv)
 
                 leftVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope));  // Extract the left voltage reading from the cluon::data::Envelope and store it in "leftVoltage".
                 rightVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope)); // Extract the right voltage reading from the cluon::data::Envelope and store it in "rightVoltage".
+
+                if (envelope.senderStamp() == 1) { // If the sender ID of the envelope is 1 (left IR sensor):
+                    //std::cout << "Left Sensor Voltage: " << std::fixed << std::setprecision(10) << leftVoltage.voltage() << std::endl; // Print the left voltage reading to the console.
+                    left_voltage_data = leftVoltage.voltage();
+                }
+
+                if (envelope.senderStamp() == 3) { // If the sender ID of the envelope is 3 (right IR sensor):
+                    //std::cout << "Right Sensor Voltage: " << std::fixed << std::setprecision(10) << rightVoltage.voltage() << std::endl; // Print the right voltage reading to the console.
+                    right_voltage_data = rightVoltage.voltage();
+                }
             };
 
             od4.dataTrigger(opendlv::proxy::VoltageReading::ID(), VoltageReading); // Trigger the "VoltageReading" lambda function when a message with the ID of opendlv::proxy::VoltageReading is received.
@@ -115,7 +129,11 @@ int main(int argc, char **argv)
                     cv::Mat wrapped(HEIGHT, WIDTH, CV_8UC4, sharedMemory->data());
                     img = wrapped.clone();
                 }
+                int64_t sampleTimeStamp = cluon::time::toMicroseconds(sharedMemory->getTimeStamp().second);
                 sharedMemory->unlock();
+                std::stringstream final;
+                final << sampleTimeStamp;
+                //std::cout << "group_06;" << final.str() << ";" << steeringWheelAngle << std::endl;
 
                 // define the color spaces used for blue and yellow cones
                 cv::Mat imgHSV;
@@ -140,10 +158,19 @@ int main(int argc, char **argv)
                     std::lock_guard<std::mutex> lck(gsrMutex);
                     // calculateStats(imgCenterLeft, imgCenterRight, gsr, isBlueLeft);
                     float g1 = gsr.groundSteering();
-                    float g2 = getGSR(imgCenterLeft, imgCenterRight, leftVoltage, rightVoltage);
+                    float g2 = getGSR(imgCenterLeft, imgCenterRight, left_voltage_data, right_voltage_data);
                     determineError(g1, g2);
-                    writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
-                }
+                    //writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
+                     std::string filename = "/host/data.csv";
+
+                     std::stringstream file_data;
+                    // Append formatted data to the string stream "data"
+                    file_data << g1 << "," << final.str();
+
+                    // Write the previous and current commit values to the CSV file
+                    write_file(filename, std::to_string(g2), file_data.str());
+
+                }  
             }
         }
         retCode = 0;

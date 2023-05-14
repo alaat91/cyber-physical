@@ -12,7 +12,7 @@ void calculateStats(
     opendlv::proxy::GroundSteeringRequest gsr,
     bool isBlueLeft);
 
-void writePixels(float bluePixels, float YellowPixels, float gsr, float calcGsr);
+// void writePixels(float bluePixels, float YellowPixels, float gsr, float calcGsr);
 
 void determineError(float g1, float g2);
 
