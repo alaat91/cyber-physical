@@ -105,3 +105,12 @@ install(TARGETS ${PROJECT_NAME} DESTINATION bin COMPONENT ${PROJECT_NAME})
 # Implement testing.
 enable_testing()
 add_custom_target(coverage)
+
+################################################################################
+# Implement pmccabe
+add_custom_target(pmccabe
+        COMMAND pmccabe -v ${CMAKE_CURRENT_SOURCE_DIR}/src/data/steering.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/steer-clear.cpp
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running pmccabe on source files"
+        )
+add_dependencies(${PROJECT_NAME} pmccabe)
