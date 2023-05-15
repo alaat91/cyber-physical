@@ -71,7 +71,8 @@ float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
     {
         gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
     }
-    else if (isBlueLeft && yellowPixels > COLOR_THRESHOLD)
+    
+    if (isBlueLeft && yellowPixels > COLOR_THRESHOLD)
     {
         gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
     }
