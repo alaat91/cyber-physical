@@ -50,7 +50,7 @@ float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, opendlv::proxy::VoltageRe
 
 float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
 {
-    float gsr = 0;
+    float gsr = -1;
     int bluePixels = cv::countNonZero(centerBlue);
     int yellowPixels = cv::countNonZero(centerYellow);
 
@@ -65,24 +65,20 @@ float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
 
     if (isBlueLeft && bluePixels > COLOR_THRESHOLD)
     {
-        gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        gsr = -1.0 * ((bluePixels * slope) + OUTPUT_LOWER_BOUND);
     }
     else if (!isBlueLeft && bluePixels > COLOR_THRESHOLD)
     {
-        gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        gsr = (bluePixels * slope) + OUTPUT_LOWER_BOUND;
     }
     
     if (isBlueLeft && yellowPixels > COLOR_THRESHOLD)
     {
-        gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        gsr = (bluePixels * slope) + OUTPUT_LOWER_BOUND;
     }
     else if (!isBlueLeft && yellowPixels > COLOR_THRESHOLD)
     {
-        gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
-    }
-    else
-    {
-        gsr = -1;
+        gsr = -1.0 * ((bluePixels * slope) + OUTPUT_LOWER_BOUND);
     }
 
     return gsr;
