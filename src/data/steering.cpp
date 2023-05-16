@@ -48,43 +48,59 @@ float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, float left_voltage_data, 
     return cv != -1 ? cv : getIrGSR(left_voltage_data, right_voltage_data);
 }
 
+// Calculate the GSR (Ground Steering Request) value based on the number of blue and yellow pixels in the input matrices,
+// considering the color threshold and using predefined input/output bounds and slope for the GSR calculation.
+// The calculated GSR value is returned, and if no conditions for GSR calculation are met, -1 is returned.
 float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
 {
-    float gsr = 0;
-    int bluePixels = cv::countNonZero(centerBlue);
-    int yellowPixels = cv::countNonZero(centerYellow);
+    float gsr = 0;  // Initialize the variable to hold the GSR value.
+    int bluePixels = cv::countNonZero(centerBlue);  // Count the number of non-zero pixels in the centerBlue matrix.
+    int yellowPixels = cv::countNonZero(centerYellow);  // Count the number of non-zero pixels in the centerYellow matrix.
 
+    // Define constants for color and input/output bounds.
     float COLOR_THRESHOLD = 220;
     float INPUT_LOWER_BOUND = 0;
     float INPUT_UPPER_BOUND = 1200;
-
     float OUTPUT_LOWER_BOUND = 0;
     float OUTPUT_UPPER_BOUND = 0.21;
 
+    // Calculate the slope for the GSR calculation.
     float slope = (OUTPUT_UPPER_BOUND - OUTPUT_LOWER_BOUND) / (INPUT_UPPER_BOUND - INPUT_LOWER_BOUND);
 
-    if (isBlueLeft && bluePixels > COLOR_THRESHOLD)
+    if (isBlueLeft)  // Check if the blue color is on the left side.
     {
-        gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        if (bluePixels > COLOR_THRESHOLD)
+        {
+            // If bluePixels exceeds the color threshold, calculate the GSR value accordingly and subtract from gsr.
+            gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        }
+        else if (yellowPixels > COLOR_THRESHOLD)
+        {
+            // If bluePixels doesn't exceed the color threshold but yellowPixels does, calculate the GSR value accordingly and add to gsr.
+            gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        }
     }
-    else if (!isBlueLeft && bluePixels > COLOR_THRESHOLD)
+    else  // If the blue color is on the right side.
     {
-        gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        if (bluePixels > COLOR_THRESHOLD)
+        {
+            // If bluePixels exceeds the color threshold, calculate the GSR value accordingly and add to gsr.
+            gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        }
+        else if (yellowPixels > COLOR_THRESHOLD)
+        {
+            // If bluePixels doesn't exceed the color threshold but yellowPixels does, calculate the GSR value accordingly and subtract from gsr.
+            gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        }
     }
-    else if (isBlueLeft && yellowPixels > COLOR_THRESHOLD)
+
+    if (!(isBlueLeft || bluePixels > COLOR_THRESHOLD || yellowPixels > COLOR_THRESHOLD))
     {
-        gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
-    }
-    else if (!isBlueLeft && yellowPixels > COLOR_THRESHOLD)
-    {
-        gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
-    }
-    else
-    {
+        // If none of the conditions for GSR calculation are met, set gsr to -1.
         gsr = -1;
     }
 
-    return gsr;
+    return gsr;  // Return the calculated GSR value.
 }
 
 // Calculate steeringWheelAngle bases on infrared sensor data
