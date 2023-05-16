@@ -26,31 +26,31 @@ void write_header_row(const std::string& filename) {
     file.close();
 }
 
-void write_file(const std::string& filename, const std::string& current_commit, const std::string& data) {
-    static bool removeFile = true;
+void write_file(const std::string& current_commit, const std::string& data) {
+    static bool createFile = true;
     static bool header_exists = false;
-    // Check if the file already exists
-    bool fileExists = std::filesystem::exists(filename);
+    int counter = 1;
 
-    // Open the file in append mode or create a new file in append mode
     std::ofstream file;
-    if (fileExists && removeFile) {
-        // Remove the file if it exists
-        std::filesystem::remove(filename);
-    }
+    static std::string newFilename = "/host/data.csv";
 
+    if(createFile){
+        while (std::filesystem::exists(newFilename)) {
+            newFilename = "/host/data-" + std::to_string(counter++) +".csv";
+        }
+        createFile = false;
+    }
+    
     if (!header_exists) {
-        write_header_row(filename);
+        write_header_row(newFilename);
         header_exists = true;
     }
 
-    file.open(filename, std::ios_base::app);
-    removeFile = false;
+    file.open(newFilename, std::ios_base::app); 
 
-    // Check if the file was opened successfully
     if (!file.is_open()) {
         // Output an error message to the standard error stream and return
-        std::cerr << "Error opening file " << filename << std::endl;
+        std::cerr << "Error opening file " << newFilename << std::endl;
         return;
     }
 
