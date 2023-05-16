@@ -31,9 +31,11 @@ void write_file(const std::string& current_commit, const std::string& data) {
     static bool header_exists = false;
     int counter = 1;
 
+    // Open the file in write mode or create a new file in write mode
     std::ofstream file;
     static std::string newFilename = "/host/data.csv";
 
+    // Create a new file if the original file exists
     if(createFile){
         while (std::filesystem::exists(newFilename)) {
             newFilename = "/host/data-" + std::to_string(counter++) +".csv";
@@ -41,13 +43,15 @@ void write_file(const std::string& current_commit, const std::string& data) {
         createFile = false;
     }
     
+    // check if the header exist in the csv file
     if (!header_exists) {
         write_header_row(newFilename);
         header_exists = true;
     }
 
-    file.open(newFilename, std::ios_base::app); 
+    file.open(newFilename, std::ios_base::app); // Open the file in write mode
 
+    // Check if the file was opened successfully
     if (!file.is_open()) {
         // Output an error message to the standard error stream and return
         std::cerr << "Error opening file " << newFilename << std::endl;
@@ -63,3 +67,4 @@ void write_file(const std::string& current_commit, const std::string& data) {
     // Flush and close the file stream
     file.close();
 }
+
