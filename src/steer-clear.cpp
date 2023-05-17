@@ -168,7 +168,7 @@ int main(int argc, char **argv)
                     file_data << g1 << "," << final.str();
 
                     // Write the previous and current commit values to the CSV file
-                    write_file(filename, std::to_string(g2), file_data.str());
+                    write_file( std::to_string(g2), file_data.str());
 
                 }  
             }
