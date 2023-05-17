@@ -148,9 +148,9 @@ void determineError(float g1, float g2)
     {
         e = fabs(g1 - g2);
     }
-    std::cout << "Original Steering: " << g1 << std::endl;
-    std::cout << "Ground Steering: " << g2 << std::endl;
-    std::cout << "Error: " << e << std::endl;
+    std::cout << "Original Steering:   " << g1 << std::endl;
+    std::cout << "Calculated Steering: " << g2 << std::endl;
+    std::cout << "Error: " << e << " %" << std::endl;
 
     if (g1 != 0 && e <= 30)
     {

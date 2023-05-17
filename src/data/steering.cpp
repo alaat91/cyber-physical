@@ -1,8 +1,7 @@
 #include "steering.hpp"
 
-static bool isBlueLeft = false;
 
-bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow, cv::Rect centerLeft, cv::Rect centerRight)
+bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow, cv::Rect centerLeft, cv::Rect centerRight, bool *isBlueLeft)
 {
     static bool isSteeringDetermined = false;
     if (!isSteeringDetermined)
@@ -21,7 +20,7 @@ bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow,
         std::cout << yellowPixels << std::endl;
         if (bluePixels > 30 && yellowPixels > 30)
         {
-            isBlueLeft = true;
+            *isBlueLeft = true;
             std::cout << "Blue is on the left" << std::endl;
             return true;
         }
@@ -33,7 +32,7 @@ bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow,
             yellowPixels = cv::countNonZero(imageLEFT);
             if (bluePixels > 30 && yellowPixels > 30)
             {
-                isBlueLeft = false;
+                *isBlueLeft = false;
                 std::cout << "Blue is on the right" << std::endl;
                 return true;
             }
@@ -42,19 +41,27 @@ bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow,
     return false;
 }
 
-float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, opendlv::proxy::VoltageReading leftVoltage, opendlv::proxy::VoltageReading rightVoltage)
+float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, opendlv::proxy::VoltageReading leftVoltage, opendlv::proxy::VoltageReading rightVoltage, bool *isBlueLeft)
 {
-    float cv = getCvGSR(centerBlue, centerYellow);
-    return cv != -1 ? cv : getIrGSR(leftVoltage, rightVoltage);
+    float cv = getCvGSR(centerBlue, centerYellow, isBlueLeft);
+    float ir = getIrGSR(leftVoltage, rightVoltage);
+    if(cv == 0 && ir == -1){
+        return *isBlueLeft ? -0.049f : 0.049f;
+    } else if(cv != 0){
+        return cv;
+    } else {
+        return ir;
+    }
+
 }
 
-float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
+float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow, bool *isBlueLeft)
 {
-    float gsr = -1;
+    float gsr = 0;
     int bluePixels = cv::countNonZero(centerBlue);
     int yellowPixels = cv::countNonZero(centerYellow);
 
-    float COLOR_THRESHOLD = 220;
+    float COLOR_THRESHOLD = 600;
     float INPUT_LOWER_BOUND = 0;
     float INPUT_UPPER_BOUND = 1200;
 
@@ -65,20 +72,20 @@ float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
 
     if (isBlueLeft && bluePixels > COLOR_THRESHOLD)
     {
-        gsr = -1.0 * ((bluePixels * slope) + OUTPUT_LOWER_BOUND);
+        gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
     }
     else if (!isBlueLeft && bluePixels > COLOR_THRESHOLD)
     {
-        gsr = (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
     }
     
     if (isBlueLeft && yellowPixels > COLOR_THRESHOLD)
     {
-        gsr = (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        gsr += (yellowPixels * slope) + OUTPUT_LOWER_BOUND;
     }
     else if (!isBlueLeft && yellowPixels > COLOR_THRESHOLD)
     {
-        gsr = -1.0 * ((bluePixels * slope) + OUTPUT_LOWER_BOUND);
+        gsr -= ((yellowPixels * slope) + OUTPUT_LOWER_BOUND);
     }
 
     return gsr;
@@ -90,12 +97,11 @@ float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
  * If rightVoltage is 0.01 or higher, set steeringWheelAngle to 0.04.
  * Else, set steeringWheelAngle to zero.
  */
-float getIrGSR(opendlv::proxy::VoltageReading leftVoltage, opendlv::proxy::VoltageReading rightVoltage)
+float getIrGSR(opendlv::proxy::VoltageReading leftVoltage, opendlv::proxy::VoltageReading rightVoltage )
 {
     if (leftVoltage.voltage() >= 0.089f)
     {
         return -0.049f;
-    } else {
-        return 0.049f;
-    }
+    } 
+    return -1;
 };

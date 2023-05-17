@@ -14,6 +14,7 @@
 
 std::atomic<bool> should_exit{false};
 static bool isConeColorDetermined{false};
+bool *isBlueLeft = new bool(false);
 
 // Signal handler function
 void signalHandler(int signum)
@@ -124,23 +125,38 @@ int main(int argc, char **argv)
                 cv::inRange(imgHSV, cv::Scalar(101, 110, 37), cv::Scalar(142, 255, 255), imgColorSpaceBlue);
                 cv::Mat imgColorSpaceYellow;
                 cv::inRange(imgHSV, cv::Scalar(13, 58, 133), cv::Scalar(26, 255, 255), imgColorSpaceYellow);
-                cv::rectangle(img, cv::Point(180, 250), cv::Point(500, 400), cv::Scalar(0, 0, 255));
-                
+                cv::rectangle(img, cv::Point(170, 250), cv::Point(460, 400), cv::Scalar(0, 0, 255));
+                cv::rectangle(img, cv::Point(200, 250), cv::Point(500, 400), cv::Scalar(0, 255, 0));
+                cv::imshow("Image", img);
+
                 // define the center areas of focus for the cv algorithm 
-                cv::Rect centerLeft(160, 250, 330, 150);
-                cv::Rect centerRight(180, 250, 370, 150);
-                cv::Mat imgCenterLeft = imgColorSpaceBlue(centerLeft);
-                cv::Mat imgCenterRight = imgColorSpaceYellow(centerRight);
+                cv::Rect centerLeft(170, 250, 270, 150);
+                cv::Rect centerRight(170, 250, 320, 150);
+                cv::Mat imgCenterLeft;
+                cv::Mat imgCenterRight;
+                if (*isBlueLeft){
+                    imgCenterLeft = imgColorSpaceBlue(centerLeft);
+                    imgCenterRight = imgColorSpaceYellow(centerRight);
+                } else {
+                    imgCenterLeft = imgColorSpaceYellow(centerLeft); 
+                    imgCenterRight = imgColorSpaceBlue(centerRight);
+                }
+                cv::imshow("Left", imgCenterLeft);
+                cv::imshow("Right", imgCenterRight);
+
+
+                
 
                 // determine the side of the colored cones, performed until a color is decided upon
-                isConeColorDetermined = !isConeColorDetermined ? determineConeColors(imgColorSpaceBlue, imgColorSpaceYellow, centerLeft, centerRight) : isConeColorDetermined;
+                isConeColorDetermined = !isConeColorDetermined ? determineConeColors(imgColorSpaceBlue, imgColorSpaceYellow, centerLeft, centerRight, isBlueLeft) : isConeColorDetermined;
 
                 // If you want to access the latest received ground steering, don't forget to lock the mutex:
                 {
                     std::lock_guard<std::mutex> lck(gsrMutex);
                     // calculateStats(imgCenterLeft, imgCenterRight, gsr, isBlueLeft);
                     float g1 = gsr.groundSteering();
-                    float g2 = getGSR(imgCenterLeft, imgCenterRight, leftVoltage, rightVoltage);
+                    float g2 = getGSR(imgCenterLeft, imgCenterRight, leftVoltage, rightVoltage, isBlueLeft);
+                    
                     determineError(g1, g2);
                     writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
                 }
