@@ -13,24 +13,28 @@ These instructions will help you get a copy of the project up and running on you
 To build and use this project, you need to proced the following steps:
 
 1. Download Docker and Docker compose if you don't have them:
-```
+
 Installation guide for docker: [docker](https://docs.docker.com/engine/install/)
 
 Intstallion guide for docker compose: [docker-compose](https://docs.docker.com/compose/install/)
-```
-2. Create a new empty folder and download those recording files to try our microservise on:
-```
-you found the recording files in our repo by following this link: [text](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/tree/main/recordings)
 
-```
+2. Create a new empty folder and download those recording files to try our microservise on:
+
+you found the recording files in our repo by following this link: [Recordings folder](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/tree/main/recordings)
+
 3. Run openDLV microservice to be able to inspect the your downloaded files:
+
+1. Download Docker and Docker compose if you don't have them:
+
 ```
 docker run --rm -i --init --name=opendlv-vehicle-view -v $PWD:/opt/vehicle-view/recordings -v /var/run/docker.sock:/var/run/docker.sock -p 8081:8081 chrberger/opendlv-vehicle-view:v0.0.64
 
 ```
+
 To access the openDLV interface you need to start a web-browser on your machine using http://A.B.C.D:8081. Replace A.B.C.D with the IP address for yous host machine.
 
 4. Build and run the opendlv-video-h264-decoder microservice to unpacking the h264 video frames to the more sutible pixles layout ARGB:
+
 ```
 docker build https://github.com/chalmers-revere/opendlv-video-h264-decoder.git#v0.0.5 -f Dockerfile -t h264decoder:v0.0.5
 
@@ -50,31 +54,40 @@ git clone git@git.chalmers.se:courses/dit638/students/2023-group-06.git
 ```
 
 2. Navigate to the project's root directory:
+
 ```
 cd 2023-group-06
 ```
 
 3. Build and run turmeric-cod microservice to generate a steering wheel angle values based on color-detection and IR-sensor technologies:
+
 ```
 docker build -f Dockerfile -t turmeric-cod .
 
 docker run --rm -ti --net=host --ipc=host -v /tmp:/tmp -e DISPLAY=$DISPLAY termuric-cod:latest --name=img --width=640 --height=480 --cid=253
 ```
-or 
+
+or
+
+or
 
 4. Build the project using docer-compse.yml file in our repository:
+
 ```
 docker compose up
 
 ```
+
 After doing that you should have complete setup to run turmeric-cod microservice and use all its capabilities
 
+After doing that you should have complete setup to run turmeric-cod microservice and use all its capabilities
 
 ### Running the Tests
 
 To run the tests for this project, navigate to the `build` directory and run the `make test` command.
 
 # Functional Requirements
+
 - The system must receive and process car data from infrared sensors.
 - The system must receive and process image data for steering calculations.
 - The system should integrate the infrared sensor and image data to make accurate steering decisions.
@@ -91,6 +104,7 @@ To run the tests for this project, navigate to the `build` directory and run the
 - The output must include the group number, sample time stamp, and computed steering wheel angle.
 
 # Non-Functional Requirements
+
 - The system must be faster than 100 milliseconds per frame.
 - The steering angle must be within +/- 30% of the original steering angle in more than or equal to 55% of all video frames.
 - The steering angle must be +/- 0.05 when the original steering angle is 0.
@@ -100,26 +114,30 @@ To run the tests for this project, navigate to the `build` directory and run the
 - The application must execute without crashing on both Intel/AMD x86_64 and ARM platforms.
 
 ## Working as a Team
+
 ### Add new features
-For a feature that has already been added to the issue board. 
- * Create a new feature branch 
- * Make the relevant changes 
- * Push code to remote feature branch
- * Create a merge request when feature has been tested and fulfills the acceptance criteria
- * Tag relevant members of the team
- * Fulfill the definition of done for the merge request
- * Assign a reviewer and await response
- * As a reviewer, it is your responsibility to make sure that the DOD is met.
- * Make relevant changes if needed, otherwise merge.
- 
- ### Breaking Changes
- * Register a new issue as a bug on the KanBan board
- * Follow the same steps as for adding new features
- 
- For new features that have not yet been added to the issue board. A new issue should be created that defines an acceptance criteria as well as label the issue accordingly.
- 
-   
+
+For a feature that has already been added to the issue board.
+
+- Create a new feature branch
+- Make the relevant changes
+- Push code to remote feature branch
+- Create a merge request when feature has been tested and fulfills the acceptance criteria
+- Tag relevant members of the team
+- Fulfill the definition of done for the merge request
+- Assign a reviewer and await response
+- As a reviewer, it is your responsibility to make sure that the DOD is met.
+- Make relevant changes if needed, otherwise merge.
+
+### Breaking Changes
+
+- Register a new issue as a bug on the KanBan board
+- Follow the same steps as for adding new features
+
+For new features that have not yet been added to the issue board. A new issue should be created that defines an acceptance criteria as well as label the issue accordingly.
+
 ### The seven rules of a great Git commit message
+
 Separate subject from body with a blank line https://cbea.ms/git-commit/#separate
 
 Limit the subject line to 50 characters https://cbea.ms/git-commit/#limit-50
@@ -135,20 +153,20 @@ Wrap the body at 72 characters https://cbea.ms/git-commit/#wrap-72
 Use the body to explain what and why vs. how https://cbea.ms/git-commit/#why-not-how
 
 ## Built With
-* [G++](https://gcc.gnu.org/) - Compiler
-* [CMake](https://cmake.org/) - Build system
-* [Make](https://www.gnu.org/software/make/) - Build automation tool
-* [OpenCV](https://opencv.org/) - Computer Vision
+
+- [G++](https://gcc.gnu.org/) - Compiler
+- [CMake](https://cmake.org/) - Build system
+- [Make](https://www.gnu.org/software/make/) - Build automation tool
+- [OpenCV](https://opencv.org/) - Computer Vision
 
 ## Authors
 
-* **Armin Balesic** - [balesic](https://git.chalmers.se/balesic)
-* **Alaa Taleb** - [alaat](https://git.chalmers.se/alaat)
-* **Umar Mahmood** - [umarma](https://git.chalmers.se/umarma)
-* **Shariq Shahbaz** - [shariqs](https://git.chalmers.se/shariqs)
-* **Victor Campanello** - [viccam](https://git.chalmers.se/viccam)
+- **Armin Balesic** - [balesic](https://git.chalmers.se/balesic)
+- **Alaa Taleb** - [alaat](https://git.chalmers.se/alaat)
+- **Umar Mahmood** - [umarma](https://git.chalmers.se/umarma)
+- **Shariq Shahbaz** - [shariqs](https://git.chalmers.se/shariqs)
+- **Victor Campanello** - [viccam](https://git.chalmers.se/viccam)
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
-
