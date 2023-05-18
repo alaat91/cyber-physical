@@ -10,10 +10,33 @@ These instructions will help you get a copy of the project up and running on you
 
 ### Prerequisites
 
-To build this project, you will need to have CMake, Make and G++ installed on your system. The installation may vary depending on your operating system, but the instructions for a Debian based system (e.g Ubuntu) are listed below. You can install them using the following commands:
+To build and use this project, you need to proced the following steps:
+
+1. Download Docker and Docker compose if you don't have them:
+```
+Installation guide for docker: https://docs.docker.com/engine/install/
+
+Intstallion guide for docker compose: https://docs.docker.com/compose/install/
+```
+2. Create a new empty folder and download those recording files to try our microservise on:
+```
+
 
 ```
-sudo apt-get install cmake build-essential
+3. Run openDLV microservice to be able to inspect the your downloaded files:
+```
+docker run --rm -i --init --name=opendlv-vehicle-view -v $PWD:/opt/vehicle-view/recordings -v /var/run/docker.sock:/var/run/docker.sock -p 8081:8081 chrberger/opendlv-vehicle-view:v0.0.64
+
+```
+To access the openDLV interface you need to start a web-browser on your machine using http://A.B.C.D:8081. Replace A.B.C.D with the IP address for yous host machine.
+
+4. Build and run the opendlv-video-h264-decoder microservice to unpacking the h264 video frames to the more sutible pixles layout ARGB:
+```
+docker build https://github.com/chalmers-revere/opendlv-video-h264-decoder.git#v0.0.5 -f Dockerfile -t h264decoder:v0.0.5
+
+xhost +
+
+docker run --rm -ti --net=host -e DISPLAY=$DISPLAY -v /tmp:/tmp h264decoder:v0.0.5 --cid=253 --name=img
 ```
 
 ### Building the Project
@@ -21,7 +44,6 @@ sudo apt-get install cmake build-essential
 To build the project, follow these steps:
 
 1. Clone the repository into a clean folder:
-
 
 ```
 git clone git@git.chalmers.se:courses/dit638/students/2023-group-06.git
@@ -32,23 +54,21 @@ git clone git@git.chalmers.se:courses/dit638/students/2023-group-06.git
 cd 2023-group-06
 ```
 
-3. Download Docker and Docker compose if you don't have them:
+3. Build and run turmeric-cod microservice to generate a steering wheel angle values based on color-detection and IR-sensor technologies:
 ```
-Installation guide for docker: https://docs.docker.com/engine/install/
-Intstallion guide for docker compose: https://docs.docker.com/compose/install/
+docker build -f Dockerfile -t turmeric-cod .
 
+docker run --rm -ti --net=host --ipc=host -v /tmp:/tmp -e DISPLAY=$DISPLAY termuric-cod:latest --name=img --width=640 --height=480 --cid=253
+```
+or 
 
-4. Run CMake to generate the Makefiles:
+4. Build the project using docer-compse.yml file in our repository:
 ```
-cmake ../src
-```
+docker compose up
 
-5. Run Make to build the project:
 ```
-make
-```
+After doing that you should have complete setup to run turmeric-cod microservice and use all its capabilities
 
-After completing these steps, you should have an executable file in the `build` directory that you can run to test the project.
 
 ### Running the Tests
 
