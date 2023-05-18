@@ -173,7 +173,7 @@ int main(int argc, char **argv)
                     std::lock_guard<std::mutex> lck(gsrMutex);
                     // calculateStats(imgCenterLeft, imgCenterRight, gsr, isBlueLeft);
                     float g1 = gsr.groundSteering();
-                    float g2 = getGSR(imgCenterLeft, imgCenterRight, left_voltage_data, right_voltage_data);
+                    float g2 = getGSR(imgCenterLeft, imgCenterRight, left_voltage_data, right_voltage_data, isBlueLeft);
                     determineError(g1, g2);
                     //writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
                      std::string filename = "/host/data.csv";

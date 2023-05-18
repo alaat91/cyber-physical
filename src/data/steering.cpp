@@ -41,10 +41,10 @@ bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow,
     return false;
 }
 
-float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, opendlv::proxy::VoltageReading leftVoltage, opendlv::proxy::VoltageReading rightVoltage, bool *isBlueLeft)
+float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, float left_voltage_data, float right_voltage_data, bool *isBlueLeft)
 {
     float cv = getCvGSR(centerBlue, centerYellow, isBlueLeft);
-    float ir = getIrGSR(leftVoltage, rightVoltage);
+    float ir = getIrGSR(left_voltage_data, right_voltage_data);
     if(cv == 0 && ir == -1){
         return *isBlueLeft ? -0.049f : 0.049f;
     } else if(cv != 0){
@@ -97,12 +97,6 @@ float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow, bool *isBlueLeft)
         }
     }
 
-    if (!(isBlueLeft || bluePixels > COLOR_THRESHOLD || yellowPixels > COLOR_THRESHOLD))
-    {
-        // If none of the conditions for GSR calculation are met, set gsr to -1.
-        gsr = -1;
-    }
-
     return gsr;  // Return the calculated GSR value.
 }
 
@@ -110,10 +104,9 @@ float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow, bool *isBlueLeft)
 float getIrGSR(float left_voltage_data, float right_voltage_data) {
 
     if (left_voltage_data >= 0.09f) { // Check if leftVoltage is 0.09 or higher
-        return -0.03f; // Set steeringWheelAngle to -0.03 (turn right)
-    } else if (right_voltage_data >= 0.09f) { // Check if rightVoltage is 0.09 or higher
-        return 0.03f; // Set steeringWheelAngle to 0.03 (turn left)
-    } else {
-        return 0.00f; // Set steeringWheelAngle to zero (no turn).
+        return -0.049f; // Set steeringWheelAngle to -0.03 (turn right)
+    } else if (right_voltage_data >= 0.04f) { // Check if rightVoltage is 0.09 or higher
+        return 0.048f; // Set steeringWheelAngle to 0.03 (turn left)
     }
+    return -1; // Set steeringWheelAngle to zero (no turn).
 }
