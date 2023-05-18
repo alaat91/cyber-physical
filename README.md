@@ -105,13 +105,13 @@ After doing that you should have complete setup to run turmeric-cod microservice
 
 # Visual representation of important system aspects:
 
-## Component diagram visualizing how our system works:
+### Component diagram visualizing how our system works:
 
-![component-diagram](diagrams/algorithm-visualisation.drawio.png)
+![component-diagram](diagrams/component-digram-dit639.drawio.png)
 
-## Diagram of how our color detecting algorithm work:
+### Diagram of how our color-detecting algorithm work:
 
-![color-detecting algorithm visualisation](algorithm-visualisation.drawio.png)
+![color-detecting algorithm visualisation](diagrams/algorithm-visualisation.drawio.png)
 
 ## Working as a Team
 
