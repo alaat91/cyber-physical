@@ -32,10 +32,11 @@ git clone git@git.chalmers.se:courses/dit638/students/2023-group-06.git
 cd 2023-group-06
 ```
 
-3. Create a build directory and navigate to it:
+3. Download Docker and Docker compose if you don't have them:
 ```
-mkdir build && cd build
-```
+Installation guide for docker: https://docs.docker.com/engine/install/
+Intstallion guide for docker compose: https://docs.docker.com/compose/install/
+
 
 4. Run CMake to generate the Makefiles:
 ```
