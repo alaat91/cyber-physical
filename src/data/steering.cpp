@@ -57,51 +57,63 @@ float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, opendlv::proxy::VoltageRe
 
 float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow, bool *isBlueLeft)
 {
-    float gsr = 0;
-    int bluePixels = cv::countNonZero(centerBlue);
-    int yellowPixels = cv::countNonZero(centerYellow);
+    float gsr = 0;  // Initialize the variable to hold the GSR value.
+    int bluePixels = cv::countNonZero(centerBlue);  // Count the number of non-zero pixels in the centerBlue matrix.
+    int yellowPixels = cv::countNonZero(centerYellow);  // Count the number of non-zero pixels in the centerYellow matrix.
 
     float COLOR_THRESHOLD = 600;
     float INPUT_LOWER_BOUND = 0;
     float INPUT_UPPER_BOUND = 1200;
-
     float OUTPUT_LOWER_BOUND = 0;
     float OUTPUT_UPPER_BOUND = 0.21;
 
+    // Calculate the slope for the GSR calculation.
     float slope = (OUTPUT_UPPER_BOUND - OUTPUT_LOWER_BOUND) / (INPUT_UPPER_BOUND - INPUT_LOWER_BOUND);
 
-    if (isBlueLeft && bluePixels > COLOR_THRESHOLD)
+    if (isBlueLeft)  // Check if the blue color is on the left side.
     {
-        gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        if (bluePixels > COLOR_THRESHOLD)
+        {
+            // If bluePixels exceeds the color threshold, calculate the GSR value accordingly and subtract from gsr.
+            gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        }
+        else if (yellowPixels > COLOR_THRESHOLD)
+        {
+            // If bluePixels doesn't exceed the color threshold but yellowPixels does, calculate the GSR value accordingly and add to gsr.
+            gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        }
     }
-    else if (!isBlueLeft && bluePixels > COLOR_THRESHOLD)
+    else  // If the blue color is on the right side.
     {
-        gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
-    }
-    
-    if (isBlueLeft && yellowPixels > COLOR_THRESHOLD)
-    {
-        gsr += (yellowPixels * slope) + OUTPUT_LOWER_BOUND;
-    }
-    else if (!isBlueLeft && yellowPixels > COLOR_THRESHOLD)
-    {
-        gsr -= ((yellowPixels * slope) + OUTPUT_LOWER_BOUND);
+        if (bluePixels > COLOR_THRESHOLD)
+        {
+            // If bluePixels exceeds the color threshold, calculate the GSR value accordingly and add to gsr.
+            gsr += (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        }
+        else if (yellowPixels > COLOR_THRESHOLD)
+        {
+            // If bluePixels doesn't exceed the color threshold but yellowPixels does, calculate the GSR value accordingly and subtract from gsr.
+            gsr -= (bluePixels * slope) + OUTPUT_LOWER_BOUND;
+        }
     }
 
-    return gsr;
+    if (!(isBlueLeft || bluePixels > COLOR_THRESHOLD || yellowPixels > COLOR_THRESHOLD))
+    {
+        // If none of the conditions for GSR calculation are met, set gsr to -1.
+        gsr = -1;
+    }
+
+    return gsr;  // Return the calculated GSR value.
 }
 
-/*
- * Implement basic calculation of steeringWheelAngle.
- * If leftVoltage is 0.01 or higher, set steeringWheelAngle to -0.04.
- * If rightVoltage is 0.01 or higher, set steeringWheelAngle to 0.04.
- * Else, set steeringWheelAngle to zero.
- */
-float getIrGSR(opendlv::proxy::VoltageReading leftVoltage, opendlv::proxy::VoltageReading rightVoltage )
-{
-    if (leftVoltage.voltage() >= 0.089f)
-    {
-        return -0.049f;
-    } 
-    return -1;
-};
+// Calculate steeringWheelAngle bases on infrared sensor data
+float getIrGSR(float left_voltage_data, float right_voltage_data) {
+
+    if (left_voltage_data >= 0.09f) { // Check if leftVoltage is 0.09 or higher
+        return -0.03f; // Set steeringWheelAngle to -0.03 (turn right)
+    } else if (right_voltage_data >= 0.09f) { // Check if rightVoltage is 0.09 or higher
+        return 0.03f; // Set steeringWheelAngle to 0.03 (turn left)
+    } else {
+        return 0.00f; // Set steeringWheelAngle to zero (no turn).
+    }
+}

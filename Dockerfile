@@ -13,6 +13,10 @@ RUN apt install -y --no-install-recommends \
         build-essential \
         libopencv-dev
 
+# Download and install pmccabe
+RUN apt install -y --no-install-recommends \
+        pmccabe
+
 # Include this source tree and compile the sources
 ADD . /opt/sources
 WORKDIR /opt/sources

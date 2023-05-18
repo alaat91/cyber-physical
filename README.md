@@ -53,6 +53,31 @@ After completing these steps, you should have an executable file in the `build` 
 
 To run the tests for this project, navigate to the `build` directory and run the `make test` command.
 
+# Functional Requirements
+- The system must receive and process car data from infrared sensors.
+- The system must receive and process image data for steering calculations.
+- The system should integrate the infrared sensor and image data to make accurate steering decisions.
+- The system should adapt the steering angle based on the proximity and position of detected objects.
+- The system must provide real-time feedback on the calculated steering angle.
+- The system should maintain reliability even in the event of individual hardware crashes.
+- The system should handle edge cases within stated limits.
+- The application must support a command line parameter --verbose.
+- When --verbose is provided, the application must display a debug window marking relevant algorithm features.
+- When --verbose is omitted, the application must not display any window and should not crash.
+- The application must be able to integrate into the data processing chain using opendlv-vehicle-view to replay data and h264decoder to extract frames.
+- The application must receive image information via the shared memory area and should not read video files or separate image files.
+- The application must print output on the console per frame in the following format: group_XY;sampleTimeStamp in microseconds;steeringWheelAngle.
+- The output must include the group number, sample time stamp, and computed steering wheel angle.
+
+# Non-Functional Requirements
+- The system must be faster than 100 milliseconds per frame.
+- The steering angle must be within +/- 30% of the original steering angle in more than or equal to 55% of all video frames.
+- The steering angle must be +/- 0.05 when the original steering angle is 0.
+- The application must not crash when there is no graphical user interface available.
+- The application should be able to run on a miniature car without a screen.
+- The Docker image must support multiple platforms, including linux/amd64 and linux/arm/v7.
+- The application must execute without crashing on both Intel/AMD x86_64 and ARM platforms.
+
 ## Working as a Team
 ### Add new features
 For a feature that has already been added to the issue board. 

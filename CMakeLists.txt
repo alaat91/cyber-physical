@@ -1,18 +1,3 @@
-# Copyright (C) 2020  Christian Berger
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 cmake_minimum_required(VERSION 3.2)
 
 project(steer-clear)
@@ -30,7 +15,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ${CMAKE_MODULE_PATH})
 
 ################################################################################
 # This project requires C++14 or newer.
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 # Build a static binary.
@@ -98,6 +83,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/data)
 
 set(SOURCE_FILES ${SOURCE_FILES} src/utils/stats.cpp)
 set(HEADER_FILES ${HEADER_FILES} src/utils/stats.hpp)
+set(SOURCE_FILES ${SOURCE_FILES} src/utils/fileio.cpp)
+set(HEADER_FILES ${HEADER_FILES} src/utils/fileio.hpp)
 set(SOURCE_FILES ${SOURCE_FILES} src/data/steering.cpp)
 set(HEADER_FILES ${HEADER_FILES} src/data/steering.hpp)
 
@@ -118,3 +105,12 @@ install(TARGETS ${PROJECT_NAME} DESTINATION bin COMPONENT ${PROJECT_NAME})
 # Implement testing.
 enable_testing()
 add_custom_target(coverage)
+
+################################################################################
+# Implement pmccabe
+add_custom_target(pmccabe
+        COMMAND pmccabe -v ${CMAKE_CURRENT_SOURCE_DIR}/src/data/steering.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/steer-clear.cpp
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running pmccabe on source files"
+        )
+add_dependencies(${PROJECT_NAME} pmccabe)
