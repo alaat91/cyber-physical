@@ -10,21 +10,19 @@ These instructions will help you get a copy of the project up and running on you
 
 ### Prerequisites
 
-To build and use this project, you need to proced the following steps:
+To build and use this project, you need to proceed the following steps:
 
 1. Download Docker and Docker compose if you don't have them:
 
-Installation guide for docker: [docker](https://docs.docker.com/engine/install/)
+    Installation guide for docker: [docker](https://docs.docker.com/engine/install/)
 
-Intstallion guide for docker compose: [docker-compose](https://docs.docker.com/compose/install/)
+    Intstallion guide for docker compose: [docker-compose](https://docs.docker.com/compose/install/)
 
-2. Create a new empty folder and download those recording files to try our microservise on:
+2. Create a new empty folder and download the recording files to try out our microservice on:
 
-you found the recording files in our repo by following this link: [Recordings folder](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/tree/main/recordings)
+    you found the recording files in our repo by following this link: [Recordings folder](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/tree/main/recordings)
 
-3. Run openDLV microservice to be able to inspect the your downloaded files:
-
-1. Download Docker and Docker compose if you don't have them:
+3. Run openDLV microservice to be able to inspect the recordings from your downloaded files:
 
 ```
 docker run --rm -i --init --name=opendlv-vehicle-view -v $PWD:/opt/vehicle-view/recordings -v /var/run/docker.sock:/var/run/docker.sock -p 8081:8081 chrberger/opendlv-vehicle-view:v0.0.64
@@ -66,9 +64,6 @@ docker build -f Dockerfile -t turmeric-cod .
 
 docker run --rm -ti --net=host --ipc=host -v /tmp:/tmp -e DISPLAY=$DISPLAY termuric-cod:latest --name=img --width=640 --height=480 --cid=253
 ```
-
-or
-
 or
 
 4. Build the project using docer-compse.yml file in our repository:
@@ -77,8 +72,6 @@ or
 docker compose up
 
 ```
-
-After doing that you should have complete setup to run turmeric-cod microservice and use all its capabilities
 
 After doing that you should have complete setup to run turmeric-cod microservice and use all its capabilities
 
