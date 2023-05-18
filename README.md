@@ -14,13 +14,13 @@ To build and use this project, you need to proced the following steps:
 
 1. Download Docker and Docker compose if you don't have them:
 ```
-Installation guide for docker: https://docs.docker.com/engine/install/
+Installation guide for docker: [text](https://docs.docker.com/engine/install/)
 
-Intstallion guide for docker compose: https://docs.docker.com/compose/install/
+Intstallion guide for docker compose: [text](https://docs.docker.com/compose/install/)
 ```
 2. Create a new empty folder and download those recording files to try our microservise on:
 ```
-
+you found the recording files in our repo by following this link: [text](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/tree/main/recordings)
 
 ```
 3. Run openDLV microservice to be able to inspect the your downloaded files:
