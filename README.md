@@ -16,9 +16,9 @@ To build and use this project, you need to proced the following steps:
 
    Installation guide for docker: [docker](https://docs.docker.com/engine/install/)
 
-   Intstallion guide for docker compose: [docker-compose](https://docs.docker.com/compose/install/)
+   Installation guide for docker compose: [docker-compose](https://docs.docker.com/compose/install/)
 
-2. Create a new empty folder and download those recording files to try our microservise on:
+2. Create a new empty folder and download those recording files to try our microservice on:
 
 you found the recording files in our repo by following this link: [Recordings folder](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/tree/main/recordings)
 
@@ -29,7 +29,7 @@ docker run --rm -i --init --name=opendlv-vehicle-view -v $PWD:/opt/vehicle-view/
 
 ```
 
-To access the openDLV interface you need to start a web-browser on your machine using http://A.B.C.D:8081. Replace A.B.C.D with the IP address for yous host machine.
+To access the openDLV interface you need to start a web-browser on your machine using http://A.B.C.D:8081. Replace A.B.C.D with the IP address for your host machine (127.0.0.1 will typically work). 
 
 4. Build and run the opendlv-video-h264-decoder microservice to unpacking the h264 video frames to the more sutible pixles layout ARGB:
 
