@@ -14,9 +14,9 @@ To build and use this project, you need to proced the following steps:
 
 1. Download Docker and Docker compose if you don't have them:
 ```
-Installation guide for docker: [text](https://docs.docker.com/engine/install/)
+Installation guide for docker: [docker](https://docs.docker.com/engine/install/)
 
-Intstallion guide for docker compose: [text](https://docs.docker.com/compose/install/)
+Intstallion guide for docker compose: [docker-compose](https://docs.docker.com/compose/install/)
 ```
 2. Create a new empty folder and download those recording files to try our microservise on:
 ```
