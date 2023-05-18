@@ -24,6 +24,8 @@ you found the recording files in our repo by following this link: [Recordings fo
 
 3. Run openDLV microservice to be able to inspect the your downloaded files:
 
+1. Download Docker and Docker compose if you don't have them:
+
 ```
 docker run --rm -i --init --name=opendlv-vehicle-view -v $PWD:/opt/vehicle-view/recordings -v /var/run/docker.sock:/var/run/docker.sock -p 8081:8081 chrberger/opendlv-vehicle-view:v0.0.64
 
@@ -67,12 +69,16 @@ docker run --rm -ti --net=host --ipc=host -v /tmp:/tmp -e DISPLAY=$DISPLAY termu
 
 or
 
+or
+
 4. Build the project using docer-compse.yml file in our repository:
 
 ```
 docker compose up
 
 ```
+
+After doing that you should have complete setup to run turmeric-cod microservice and use all its capabilities
 
 After doing that you should have complete setup to run turmeric-cod microservice and use all its capabilities
 
