@@ -1,8 +1,7 @@
 #include "steering.hpp"
 
-static bool isBlueLeft = false;
 
-bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow, cv::Rect centerLeft, cv::Rect centerRight)
+bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow, cv::Rect centerLeft, cv::Rect centerRight, bool *isBlueLeft)
 {
     static bool isSteeringDetermined = false;
     if (!isSteeringDetermined)
@@ -21,7 +20,7 @@ bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow,
         std::cout << yellowPixels << std::endl;
         if (bluePixels > 30 && yellowPixels > 30)
         {
-            isBlueLeft = true;
+            *isBlueLeft = true;
             std::cout << "Blue is on the left" << std::endl;
             return true;
         }
@@ -33,7 +32,7 @@ bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow,
             yellowPixels = cv::countNonZero(imageLEFT);
             if (bluePixels > 30 && yellowPixels > 30)
             {
-                isBlueLeft = false;
+                *isBlueLeft = false;
                 std::cout << "Blue is on the right" << std::endl;
                 return true;
             }
@@ -42,23 +41,27 @@ bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow,
     return false;
 }
 
-float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, float left_voltage_data, float right_voltage_data)
+float getGSR(cv::Mat centerBlue, cv::Mat centerYellow, float left_voltage_data, float right_voltage_data, bool *isBlueLeft)
 {
-    float cv = getCvGSR(centerBlue, centerYellow);
-    return cv != -1 ? cv : getIrGSR(left_voltage_data, right_voltage_data);
+    float cv = getCvGSR(centerBlue, centerYellow, isBlueLeft);
+    float ir = getIrGSR(left_voltage_data, right_voltage_data);
+    if(cv == 0 && ir == -1){
+        return *isBlueLeft ? -0.049f : 0.049f;
+    } else if(cv != 0){
+        return cv;
+    } else {
+        return ir;
+    }
+
 }
 
-// Calculate the GSR (Ground Steering Request) value based on the number of blue and yellow pixels in the input matrices,
-// considering the color threshold and using predefined input/output bounds and slope for the GSR calculation.
-// The calculated GSR value is returned, and if no conditions for GSR calculation are met, -1 is returned.
-float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
+float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow, bool *isBlueLeft)
 {
     float gsr = 0;  // Initialize the variable to hold the GSR value.
     int bluePixels = cv::countNonZero(centerBlue);  // Count the number of non-zero pixels in the centerBlue matrix.
     int yellowPixels = cv::countNonZero(centerYellow);  // Count the number of non-zero pixels in the centerYellow matrix.
 
-    // Define constants for color and input/output bounds.
-    float COLOR_THRESHOLD = 220;
+    float COLOR_THRESHOLD = 600;
     float INPUT_LOWER_BOUND = 0;
     float INPUT_UPPER_BOUND = 1200;
     float OUTPUT_LOWER_BOUND = 0;
@@ -94,12 +97,6 @@ float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
         }
     }
 
-    if (!(isBlueLeft || bluePixels > COLOR_THRESHOLD || yellowPixels > COLOR_THRESHOLD))
-    {
-        // If none of the conditions for GSR calculation are met, set gsr to -1.
-        gsr = -1;
-    }
-
     return gsr;  // Return the calculated GSR value.
 }
 
@@ -107,10 +104,9 @@ float getCvGSR(cv::Mat centerBlue, cv::Mat centerYellow)
 float getIrGSR(float left_voltage_data, float right_voltage_data) {
 
     if (left_voltage_data >= 0.09f) { // Check if leftVoltage is 0.09 or higher
-        return -0.03f; // Set steeringWheelAngle to -0.03 (turn right)
-    } else if (right_voltage_data >= 0.09f) { // Check if rightVoltage is 0.09 or higher
-        return 0.03f; // Set steeringWheelAngle to 0.03 (turn left)
-    } else {
-        return 0.00f; // Set steeringWheelAngle to zero (no turn).
+        return -0.049f; // Set steeringWheelAngle to -0.03 (turn right)
+    } else if (right_voltage_data >= 0.04f) { // Check if rightVoltage is 0.09 or higher
+        return 0.048f; // Set steeringWheelAngle to 0.03 (turn left)
     }
+    return -1; // Set steeringWheelAngle to zero (no turn).
 }
