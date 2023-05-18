@@ -14,13 +14,13 @@ To build and use this project, you need to proceed the following steps:
 
 1. Download Docker and Docker compose if you don't have them:
 
-    Installation guide for docker: [docker](https://docs.docker.com/engine/install/)
+   Installation guide for docker: [docker](https://docs.docker.com/engine/install/)
 
-    Intstallion guide for docker compose: [docker-compose](https://docs.docker.com/compose/install/)
+   Installation guide for docker compose: [docker-compose](https://docs.docker.com/compose/install/)
 
 2. Create a new empty folder and download the recording files to try out our microservice on:
 
-    you found the recording files in our repo by following this link: [Recordings folder](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/tree/main/recordings)
+   you found the recording files in our repo by following this link: [Recordings folder](https://git.chalmers.se/courses/dit638/students/2023-group-06/-/tree/main/recordings)
 
 3. Run openDLV microservice to be able to inspect the recordings from your downloaded files:
 
@@ -29,7 +29,7 @@ docker run --rm -i --init --name=opendlv-vehicle-view -v $PWD:/opt/vehicle-view/
 
 ```
 
-To access the openDLV interface you need to start a web-browser on your machine using http://A.B.C.D:8081. Replace A.B.C.D with the IP address for yous host machine.
+To access the openDLV interface you need to start a web-browser on your machine using http://A.B.C.D:8081. Replace A.B.C.D with the IP address for your host machine (127.0.0.1 will typically work).
 
 4. Build and run the opendlv-video-h264-decoder microservice to unpacking the h264 video frames to the more sutible pixles layout ARGB:
 
@@ -64,6 +64,7 @@ docker build -f Dockerfile -t turmeric-cod .
 
 docker run --rm -ti --net=host --ipc=host -v /tmp:/tmp -e DISPLAY=$DISPLAY termuric-cod:latest --name=img --width=640 --height=480 --cid=253
 ```
+
 or
 
 4. Build the project using docer-compse.yml file in our repository:
@@ -73,11 +74,7 @@ docker compose up
 
 ```
 
-After doing that you should have complete setup to run turmeric-cod microservice and use all its capabilities
-
-### Running the Tests
-
-To run the tests for this project, navigate to the `build` directory and run the `make test` command.
+After doing that you should have complete setup to run turmeric-cod microservice and use all its capabilities.
 
 # Functional Requirements
 
@@ -105,6 +102,16 @@ To run the tests for this project, navigate to the `build` directory and run the
 - The application should be able to run on a miniature car without a screen.
 - The Docker image must support multiple platforms, including linux/amd64 and linux/arm/v7.
 - The application must execute without crashing on both Intel/AMD x86_64 and ARM platforms.
+
+# Visual representation of important system aspects:
+
+### Component diagram visualizing how our system works:
+
+![component-diagram](diagrams/component-digram-dit639.drawio.png)
+
+### Diagram of how our color-detecting algorithm work:
+
+![color-detecting algorithm visualisation](diagrams/algorithm-visualisation.drawio.png)
 
 ## Working as a Team
 
