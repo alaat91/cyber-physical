@@ -16,12 +16,9 @@ bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow,
 
         int bluePixels = cv::countNonZero(imageLEFT);
         int yellowPixels = cv::countNonZero(imageRIGHT);
-        std::cout << bluePixels << std::endl;
-        std::cout << yellowPixels << std::endl;
         if (bluePixels > 30 && yellowPixels > 30)
         {
             *isBlueLeft = true;
-            std::cout << "Blue is on the left" << std::endl;
             return true;
         }
         else
@@ -33,7 +30,6 @@ bool determineConeColors(cv::Mat imgColorSpaceBlue, cv::Mat imgColorSpaceYellow,
             if (bluePixels > 30 && yellowPixels > 30)
             {
                 *isBlueLeft = false;
-                std::cout << "Blue is on the right" << std::endl;
                 return true;
             }
         }
