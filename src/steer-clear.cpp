@@ -20,7 +20,7 @@ bool *isBlueLeft = new bool(false);
 void signalHandler(int signum)
 {
     // explicitly ignore signum
-    (void) signum;
+    (void)signum;
     should_exit = true;
 }
 
@@ -102,13 +102,15 @@ int main(int argc, char **argv)
                 leftVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope));  // Extract the left voltage reading from the cluon::data::Envelope and store it in "leftVoltage".
                 rightVoltage = cluon::extractMessage<opendlv::proxy::VoltageReading>(std::move(envelope)); // Extract the right voltage reading from the cluon::data::Envelope and store it in "rightVoltage".
 
-                if (envelope.senderStamp() == 1) { // If the sender ID of the envelope is 1 (left IR sensor):
-                    //std::cout << "Left Sensor Voltage: " << std::fixed << std::setprecision(10) << leftVoltage.voltage() << std::endl; // Print the left voltage reading to the console.
+                if (envelope.senderStamp() == 1)
+                { // If the sender ID of the envelope is 1 (left IR sensor):
+                    // std::cout << "Left Sensor Voltage: " << std::fixed << std::setprecision(10) << leftVoltage.voltage() << std::endl; // Print the left voltage reading to the console.
                     left_voltage_data = leftVoltage.voltage();
                 }
 
-                if (envelope.senderStamp() == 3) { // If the sender ID of the envelope is 3 (right IR sensor):
-                    //std::cout << "Right Sensor Voltage: " << std::fixed << std::setprecision(10) << rightVoltage.voltage() << std::endl; // Print the right voltage reading to the console.
+                if (envelope.senderStamp() == 3)
+                { // If the sender ID of the envelope is 3 (right IR sensor):
+                    // std::cout << "Right Sensor Voltage: " << std::fixed << std::setprecision(10) << rightVoltage.voltage() << std::endl; // Print the right voltage reading to the console.
                     right_voltage_data = rightVoltage.voltage();
                 }
             };
@@ -133,8 +135,6 @@ int main(int argc, char **argv)
                 int64_t sampleTimeStamp = cluon::time::toMicroseconds(sharedMemory->getTimeStamp().second);
                 sharedMemory->unlock();
                 std::stringstream final;
-                final << sampleTimeStamp;
-                //std::cout << "group_06;" << final.str() << ";" << steeringWheelAngle << std::endl;
 
                 // define the color spaces used for blue and yellow cones
                 cv::Mat imgHSV;
@@ -145,25 +145,37 @@ int main(int argc, char **argv)
                 cv::inRange(imgHSV, cv::Scalar(13, 58, 133), cv::Scalar(26, 255, 255), imgColorSpaceYellow);
                 cv::rectangle(img, cv::Point(170, 250), cv::Point(460, 400), cv::Scalar(0, 0, 255));
                 cv::rectangle(img, cv::Point(200, 250), cv::Point(500, 400), cv::Scalar(0, 255, 0));
-                cv::imshow("Image", img);
 
-                // define the center areas of focus for the cv algorithm 
+                // define the center areas of focus for the cv algorithm
                 cv::Rect centerLeft(170, 250, 270, 150);
                 cv::Rect centerRight(170, 250, 320, 150);
                 cv::Mat imgCenterLeft;
                 cv::Mat imgCenterRight;
-                if (*isBlueLeft){
+                if (*isBlueLeft)
+                {
                     imgCenterLeft = imgColorSpaceBlue(centerLeft);
                     imgCenterRight = imgColorSpaceYellow(centerRight);
-                } else {
-                    imgCenterLeft = imgColorSpaceYellow(centerLeft); 
+                }
+                else
+                {
+                    imgCenterLeft = imgColorSpaceYellow(centerLeft);
                     imgCenterRight = imgColorSpaceBlue(centerRight);
                 }
-                cv::imshow("Left", imgCenterLeft);
-                cv::imshow("Right", imgCenterRight);
 
-
-                
+                // show images if verbose mode on
+                if (commandlineArguments.count("verbose") && std::getenv("DISPLAY") != nullptr)
+                {
+                    try
+                    {
+                        cv::imshow("Image", img);
+                        cv::imshow("Left Steering Area", imgCenterLeft);
+                        cv::imshow("Right Steering Area", imgCenterRight);
+                    }
+                    catch (cv::Exception &e)
+                    {
+                       
+                    }
+                }
 
                 // determine the side of the colored cones, performed until a color is decided upon
                 isConeColorDetermined = !isConeColorDetermined ? determineConeColors(imgColorSpaceBlue, imgColorSpaceYellow, centerLeft, centerRight, isBlueLeft) : isConeColorDetermined;
@@ -174,18 +186,23 @@ int main(int argc, char **argv)
                     // calculateStats(imgCenterLeft, imgCenterRight, gsr, isBlueLeft);
                     float g1 = gsr.groundSteering();
                     float g2 = getGSR(imgCenterLeft, imgCenterRight, left_voltage_data, right_voltage_data, isBlueLeft);
-                    determineError(g1, g2);
-                    //writePixels(cv::countNonZero(imgCenterLeft), cv::countNonZero(imgCenterRight), gsr.groundSteering(), g2);
-                     std::string filename = "/host/data.csv";
 
-                     std::stringstream file_data;
-                    // Append formatted data to the string stream "data"
-                    file_data << g1 << "," << final.str();
+                    if (commandlineArguments.count("stats"))
+                    {
+                        determineError(g1, g2);
+                    }
 
-                    // Write the previous and current commit values to the CSV file
-                    write_file( std::to_string(g2), file_data.str());
-
-                }  
+                    if (commandlineArguments.count("cv-data"))
+                    {
+                        std::stringstream file_data;
+                        // Append formatted data to the string stream "data"
+                        file_data << g1 << "," << final.str();
+                        // Write the commit values to the CSV file
+                        write_file(std::to_string(g2), file_data.str());
+                    }
+                    final << sampleTimeStamp;
+                    std::cout << "group_06;" << final.str() << ";" << g2 << std::endl;
+                }
             }
         }
         retCode = 0;
